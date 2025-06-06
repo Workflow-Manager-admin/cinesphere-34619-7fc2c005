@@ -113,11 +113,26 @@ function GuessTheMovieGame() {
   const [reveal, setReveal] = React.useState(false);
   const [error, setError] = React.useState('');
 
-  const [hint, setHint] = React.useState(""); // one hint, can show on demand.
-  const [hintsUsed, setHintsUsed] = React.useState(0);
+  // Hint system state: track individual hint usages per round
+  const [hintActor, setHintActor] = React.useState(false);
+  const [hintYear, setHintYear] = React.useState(false);
+  const [hintTitle, setHintTitle] = React.useState(false);
+  const [hintActorValue, setHintActorValue] = React.useState('');
+  const [hintTitleValue, setHintTitleValue] = React.useState('');
+  const [hintYearValue, setHintYearValue] = React.useState('');
 
   // Select current config per level, cycling after max level for extra difficulty
   const config = level <= LEVELS.length ? LEVELS[level-1] : LEVELS[LEVELS.length-1];
+
+  // Resets all hint state
+  function resetHints() {
+    setHintActor(false);
+    setHintTitle(false);
+    setHintYear(false);
+    setHintActorValue('');
+    setHintTitleValue('');
+    setHintYearValue('');
+  }
 
   // Fetches a random movie, difficulty/obscurity varies by level
   async function fetchGameMovie() {
@@ -126,8 +141,7 @@ function GuessTheMovieGame() {
     setReveal(false);
     setStatus("");
     setGuess("");
-    setHint("");
-    setHintsUsed(0);
+    resetHints();
 
     try {
       let found = null;

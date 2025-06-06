@@ -191,69 +191,101 @@ function GuessTheMovieGame({ regionConfig }) {
 }
 
 function HiddenGemsExplorer({ regionConfig }) {
-  // Enhanced: pagination/"Show more" for Top IMDb
-  const PAGE_SIZE = 8; // can be tuned for optimal mobile/desktop UX
-  const [gems, setGems] = React.useState([]);
+  // Enhanced: Robust client-side pagination for Top IMDb (Hidden Gems Explorer)
+  const PAGE_SIZE = 8; // No. of movies to show per "page"
+  const [gems, setGems] = React.useState([]);             // All gems loaded so far
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
-  const [page, setPage] = React.useState(1);
-  const [hasMore, setHasMore] = React.useState(true);
+  const [page, setPage] = React.useState(1);              // Tracks next remote page to fetch from TMDb
+  const [displayCount, setDisplayCount] = React.useState(PAGE_SIZE); // Number of items actually displayed to user
+  const [hasMoreRemote, setHasMoreRemote] = React.useState(true);    // More pages possibly available remotely
+  const [localGemsEndReached, setLocalGemsEndReached] = React.useState(false);
 
-  // Reset gems on region/language change
+  // Reset everything when regionConfig.language changes
   React.useEffect(() => {
     setGems([]);
     setPage(1);
-    setHasMore(true);
+    setDisplayCount(PAGE_SIZE);
+    setHasMoreRemote(true);
+    setLocalGemsEndReached(false);
+    setError("");
   }, [regionConfig.language]);
 
-  // Load gems for current page
+  // Fetch another remote "page" of data from TMDb (only if we don't already have enough locally)
   React.useEffect(() => {
     let isMounted = true;
-    setLoading(true);
-    setError("");
-    getHiddenGems(page, regionConfig.language)
-      .then(res => {
+    async function fetchMoreRemote() {
+      setLoading(true);
+      setError("");
+      try {
+        const res = await getHiddenGems(page, regionConfig.language);
         if (!isMounted) return;
-        // For each page after 1, append new gems, removing duplicates
-        if (page === 1) {
-          setGems(res.slice(0, PAGE_SIZE));
-        } else {
-          setGems(prev => {
-            const all = [...prev, ...res];
-            // De-dup
-            const dedup = [];
-            const idSet = new Set();
-            for (let m of all) {
-              if (!idSet.has(m.id)) {
-                idSet.add(m.id);
-                dedup.push(m);
-              }
-            }
-            return dedup.slice(0, prev.length + PAGE_SIZE); // Don't grow too fast
-          });
-        }
-        // If less than 18 per TMDb page, or if no new unique gems, assume no more
-        setHasMore(res.length === 20 || res.length >= PAGE_SIZE);
-      })
-      .catch(() => {
+        // Only add new/unique
+        setGems(prev => {
+          const idSet = new Set(prev.map(g => g.id));
+          const newGems = res.filter(m => !idSet.has(m.id));
+          // If nothing new in this page, end further remote fetches.
+          if (newGems.length === 0) setHasMoreRemote(false);
+          return [...prev, ...newGems];
+        });
+        // Set hasMoreRemote: less than 20 on a remote page may mean TMDb is exhausted (or < PAGE_SIZE not enough)
+        if (res.length < 20) setHasMoreRemote(false);
+      } catch {
         if (isMounted) setError("Failed to load hidden gems.");
-      })
-      .finally(() => { if (isMounted) setLoading(false); });
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+    // Whenever we've displayed everything we have locally, and want more, fetch remote
+    // Only trigger on actual intent to grow (i.e., displayCount > gems.length)
+    if (displayCount > gems.length && hasMoreRemote && !loading) {
+      fetchMoreRemote();
+    }
     return () => { isMounted = false; };
-  }, [regionConfig.language, page]);
+  }, [displayCount, page, hasMoreRemote, regionConfig.language]);
 
+  // Whether "Show more" should still be clickable
+  const canShowMore =
+    !loading && (
+      (displayCount < gems.length) || (hasMoreRemote)
+    );
+
+  // Show actual visible gems: must not exceed gems.length
+  const visible = gems.slice(0, displayCount);
+
+  // Handle Show More
   function handleShowMore() {
-    if (!loading && hasMore) setPage(prev => prev + 1);
+    // If we have enough locally for another "page", just display more
+    if (displayCount < gems.length) {
+      setDisplayCount(prev => prev + PAGE_SIZE);
+      // Don't need to trigger remote fetch here
+      setLocalGemsEndReached(false);
+    } else if (hasMoreRemote && !loading) {
+      // Ask for next remote page, and after it loads, displayCount will re-trigger if there's more
+      setPage(prev => prev + 1);
+      setDisplayCount(prev => prev + PAGE_SIZE);
+      setLocalGemsEndReached(false);
+    } else {
+      // No more remotely, and displayed all locally
+      setLocalGemsEndReached(true);
+    }
   }
+
+  React.useEffect(() => {
+    // If we just set displayCount to cover everything, but nothing left, flag local end
+    if (!hasMoreRemote && displayCount >= gems.length && gems.length !== 0) {
+      setLocalGemsEndReached(true);
+    }
+  }, [displayCount, gems.length, hasMoreRemote]);
 
   return (
     <div style={{ width: "100%" }}>
-      {loading && page === 1 && <div style={{ fontStyle: "italic" }}>Loading...</div>}
+      {loading && gems.length === 0 && <div style={{ fontStyle: "italic" }}>Loading...</div>}
       {error && (
         <div style={{ color: "#fff0ee", background: "#e34", borderRadius: 6, padding: "6px 8px", fontSize: "0.98rem" }}>{error}</div>
       )}
       <ul style={{ listStyle: "none", padding: 0, margin: 0, maxHeight: 380, overflowY: "auto" }}>
-        {gems.map(gem => (
+        {visible.map(gem => (
           <li key={gem.id} style={{
             marginBottom: 7,
             display: "flex", alignItems: "center", gap: 10,
@@ -272,7 +304,7 @@ function HiddenGemsExplorer({ regionConfig }) {
           </li>
         ))}
       </ul>
-      {!loading && !error && gems.length === 0 && (
+      {!loading && !error && visible.length === 0 && (
         <div className="cinesphere-placeholder">
           <span>
             Find hidden gems: Low-popularity, high-rated {regionConfig.label} movies!
@@ -280,7 +312,7 @@ function HiddenGemsExplorer({ regionConfig }) {
         </div>
       )}
       <div style={{ textAlign: "center", marginTop: 10 }}>
-        {hasMore && !loading && (
+        {canShowMore && (
           <button
             type="button"
             className="btn"
@@ -296,9 +328,16 @@ function HiddenGemsExplorer({ regionConfig }) {
             }}
             onClick={handleShowMore}
             disabled={loading}
-          >Show more</button>
+          >
+            Show more
+          </button>
         )}
-        {loading && page > 1 && (
+        {!canShowMore && localGemsEndReached && (
+          <span style={{ color: "#8473a5", fontStyle: "italic", marginTop: 7, display: "inline-block" }}>
+            No more results.
+          </span>
+        )}
+        {loading && gems.length > 0 && (
           <span style={{ color: "#8473a5", fontStyle: "italic", marginTop: 7, display: "inline-block" }}>Loading…</span>
         )}
       </div>

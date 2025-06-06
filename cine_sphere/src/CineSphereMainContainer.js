@@ -1,18 +1,67 @@
-import React, { useState } from "react";
+import React from "react";
 import "./CineSphereMainContainer.css";
 import { searchMovies, getHiddenGems } from "./tmdbApi";
 
 /**
  * PUBLIC_INTERFACE
- * CineSphereMainContainer displays seven feature columns for CineSphere,
- * now integrating TMDb API for "Movie Mood Matcher" and "Hidden Gems Explorer".
+ * CineSphereMainContainer displays six main cinema-industry columns,
+ * each containing all seven CineSphere features, parameterized by region/language.
+ * Features dynamically fetch region-appropriate data.
  */
 
-function MovieMoodMatcher() {
-  const [query, setQuery] = useState("");
-  const [movies, setMovies] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+// -- Configs for the six major regional columns --
+const CINE_COLUMNS = [
+  {
+    key: "hollywood",
+    label: "Hollywood",
+    language: "en",
+    regionLabel: "USA/English",
+    tmdbRegions: { lang: "en", region: "US" },
+  },
+  {
+    key: "bollywood",
+    label: "Bollywood",
+    language: "hi",
+    regionLabel: "India/Hindi",
+    tmdbRegions: { lang: "hi", region: "IN" },
+  },
+  {
+    key: "kollywood",
+    label: "Kollywood",
+    language: "ta",
+    regionLabel: "India/Tamil",
+    tmdbRegions: { lang: "ta", region: "IN" },
+  },
+  {
+    key: "tollywood",
+    label: "Tollywood",
+    language: "te",
+    regionLabel: "India/Telugu",
+    tmdbRegions: { lang: "te", region: "IN" },
+  },
+  {
+    key: "sandalwood",
+    label: "Sandalwood",
+    language: "kn",
+    regionLabel: "India/Kannada",
+    tmdbRegions: { lang: "kn", region: "IN" },
+  },
+  {
+    key: "mollywood",
+    label: "Mollywood",
+    language: "ml",
+    regionLabel: "India/Malayalam",
+    tmdbRegions: { lang: "ml", region: "IN" },
+  },
+];
+
+// Minimal local wrappers: All feature components receive props { regionConfig }
+function MovieMoodMatcher({ regionConfig }) {
+  // Extend original: Pass correct language for search
+  const [query, setQuery] = React.useState("");
+  const [movies, setMovies] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
 
   async function handleSearch(e) {
     e.preventDefault();
@@ -20,7 +69,7 @@ function MovieMoodMatcher() {
     setLoading(true);
     setError("");
     try {
-      const res = await searchMovies(query.trim());
+      const res = await searchMovies(query.trim(), 1, regionConfig.language);
       setMovies(res.slice(0, 6));
     } catch (err) {
       setError("Failed to fetch movies.");
@@ -41,7 +90,7 @@ function MovieMoodMatcher() {
             width: "75%",
             marginRight: 6,
           }}
-          placeholder="Enter your mood or genre (e.g., 'happy', 'thriller')"
+          placeholder={`Enter mood/genre (e.g., comedy)`}
           value={query}
           onChange={e => setQuery(e.target.value)}
         />
@@ -70,7 +119,7 @@ function MovieMoodMatcher() {
         {!loading && !error && movies.length === 0 && (
           <div className="cinesphere-placeholder">
             <span>
-              Try a mood keyword &mdash; Get instant movie suggestions!
+              Try a mood keyword — Get instant {regionConfig.label} picks!
             </span>
           </div>
         )}
@@ -79,40 +128,29 @@ function MovieMoodMatcher() {
   );
 }
 
-/**
- * PUBLIC_INTERFACE
- * GuessTheMovieGame - Enhanced with levels, scoring, explicit per-hint button system
- */
-function GuessTheMovieGame({ region, onRegionChange }) {
-  // Game config (unchanged)
+// --- Guess the Movie Game ---
+// The game is the same logic, but uses the column's regionConfig.language for region-specific movie fetching
+function GuessTheMovieGame({ regionConfig }) {
   const LEVELS = [
-    { blur: 8, desc: "Popular Movies", obscure: false, hintPenalty: 2 },
-    { blur: 13, desc: "Less Popular or More Blur", obscure: false, hintPenalty: 3 },
-    { blur: 16, desc: "Hard Mode: Hidden Gems", obscure: true, hintPenalty: 4 },
-    { blur: 20, desc: "Obscure + Max Blur", obscure: true, hintPenalty: 5 },
+    { blur: 8, desc: "Popular", obscure: false, hintPenalty: 2 },
+    { blur: 13, desc: "Less Popular", obscure: false, hintPenalty: 3 },
+    { blur: 16, desc: "Hidden Gems", obscure: true, hintPenalty: 4 },
+    { blur: 20, desc: "Obscure", obscure: true, hintPenalty: 5 },
   ];
   const MAX_LEVEL = 5;
   const INITIAL_SCORE = 0;
 
-  // State for region toggle local to game for persistent display (lifted state handled in parent)
-  const languageOptions = [
-    { value: 'en', label: 'Hollywood (English)' },
-    { value: 'ta', label: 'Kollywood (Tamil)' }
-  ];
-
-  // Main game state
   const [level, setLevel] = React.useState(1);
   const [score, setScore] = React.useState(INITIAL_SCORE);
   const [round, setRound] = React.useState(1);
 
-  const [movie, setMovie] = React.useState(null); // { poster_path, title }
+  const [movie, setMovie] = React.useState(null);
   const [guess, setGuess] = React.useState('');
   const [status, setStatus] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [reveal, setReveal] = React.useState(false);
   const [error, setError] = React.useState('');
 
-  // Explicit hint state for each kind of hint
   const [hintActor, setHintActor] = React.useState(false);
   const [hintYear, setHintYear] = React.useState(false);
   const [hintTitle, setHintTitle] = React.useState(false);
@@ -120,46 +158,29 @@ function GuessTheMovieGame({ region, onRegionChange }) {
   const [hintTitleValue, setHintTitleValue] = React.useState('');
   const [hintYearValue, setHintYearValue] = React.useState('');
 
-  // For per-level config
   const config = level <= LEVELS.length ? LEVELS[level-1] : LEVELS[LEVELS.length-1];
 
-  // Resets hint state entirely
   function resetHints() {
-    setHintActor(false);
-    setHintTitle(false);
-    setHintYear(false);
-    setHintActorValue('');
-    setHintTitleValue('');
-    setHintYearValue('');
+    setHintActor(false); setHintTitle(false); setHintYear(false);
+    setHintActorValue(''); setHintTitleValue(''); setHintYearValue('');
   }
 
-  // New random movie/round - fetches based on region parameter
   async function fetchGameMovie() {
-    setLoading(true);
-    setError("");
-    setReveal(false);
-    setStatus("");
-    setGuess("");
-    resetHints();
-
+    setLoading(true); setError(""); setReveal(false); setStatus(""); setGuess(""); resetHints();
     try {
       let found = null;
       if (config.obscure) {
-        // Hidden gems, filtered by region
         for (let tries = 0; tries < 5; tries++) {
-          const { getHiddenGems } = await import('./tmdbApi');
-          const gems = await getHiddenGems(Math.floor(Math.random() * 3) + 1, region);
+          const gems = await getHiddenGems(Math.floor(Math.random() * 3) + 1, regionConfig.language);
           if (gems.length > 0) {
             found = gems[Math.floor(Math.random() * gems.length)];
             if (found.poster_path && found.title) break;
           }
         }
       } else {
-        // For "popular" level, use discover for the corresponding language
         for (let tries = 0; tries < 5; tries++) {
-          const page = Math.floor(Math.random() * 12) + 1;
-          // Choose language + with_original_language depending on region
-          let lang = region === "en" ? "en" : "ta";
+          const page = Math.floor(Math.random() * 10) + 1;
+          let lang = regionConfig.language;
           let apiUrl =
             `https://api.themoviedb.org/3/discover/movie?api_key=5bc67d3b06aecbd18121a3cbbc16eb59` +
             `&with_original_language=${lang}&with_language=${lang}&sort_by=popularity.desc` +
@@ -167,12 +188,8 @@ function GuessTheMovieGame({ region, onRegionChange }) {
           const res = await fetch(apiUrl);
           if (!res.ok) throw new Error("Failed to load movie posters.");
           const data = await res.json();
-          const posters = (data.results || []).filter(
-            m =>
-              m.poster_path &&
-              m.title &&
-              !m.adult &&
-              m.original_language === lang
+          const posters = (data.results || []).filter(m =>
+            m.poster_path && m.title && !m.adult && m.original_language === lang
           );
           if (posters.length > 0) {
             found = posters[Math.floor(Math.random() * posters.length)];
@@ -194,53 +211,37 @@ function GuessTheMovieGame({ region, onRegionChange }) {
     // eslint-disable-next-line
   }, [level, round]);
 
-  // PUBLIC_INTERFACE
   function handleGuess(e) {
     e.preventDefault();
     if (!movie) return;
-    function clean(s) {
-      return s.replace(/\W/g, '').toLowerCase();
-    }
+    function clean(s) { return s.replace(/\W/g, '').toLowerCase(); }
     if (clean(guess) === clean(movie.title)) {
-      setStatus("success");
-      setReveal(true);
-      // Points: base 5, minus N * hintPenalty for hints
+      setStatus("success"); setReveal(true);
       const penalties = [hintActor, hintYear, hintTitle].filter(Boolean).length * config.hintPenalty;
       setScore(s => s + (5 - penalties));
     } else {
-      setStatus("fail");
-      setReveal(false);
-      setScore(s => s - 1);
+      setStatus("fail"); setReveal(false); setScore(s => s - 1);
     }
   }
 
-  // PUBLIC_INTERFACE - Explicit per-hint handlers
   async function handleHintActor() {
     if (!movie || hintActor) return;
-    setHintActor(true);
-    setScore(s => s - config.hintPenalty);
+    setHintActor(true); setScore(s => s - config.hintPenalty);
     try {
-      // Add with_language param for API; region dependent
       const url = `https://api.themoviedb.org/3/movie/${movie.id}/credits?api_key=5bc67d3b06aecbd18121a3cbbc16eb59`
-        + `&with_language=${region}`;
+        + `&with_language=${regionConfig.language}`;
       let res = await fetch(url);
       if (res.ok) {
         let data = await res.json();
         let lead = (data.cast && data.cast.length) ? data.cast[0].name : null;
         setHintActorValue(lead ? `Lead Actor: ${lead}` : "No lead actor found.");
-      } else {
-        setHintActorValue("No lead actor found.");
-      }
-    } catch {
-      setHintActorValue("No lead actor found.");
-    }
+      } else { setHintActorValue("No lead actor found."); }
+    } catch { setHintActorValue("No lead actor found."); }
   }
 
-  // PUBLIC_INTERFACE
   function handleHintYear() {
     if (!movie || hintYear) return;
-    setHintYear(true);
-    setScore(s => s - config.hintPenalty);
+    setHintYear(true); setScore(s => s - config.hintPenalty);
     setHintYearValue(
       movie.release_date
         ? `Release Year: ${movie.release_date.slice(0,4)}`
@@ -248,11 +249,9 @@ function GuessTheMovieGame({ region, onRegionChange }) {
     );
   }
 
-  // PUBLIC_INTERFACE
   function handleHintTitle() {
     if (!movie || hintTitle) return;
-    setHintTitle(true);
-    setScore(s => s - config.hintPenalty);
+    setHintTitle(true); setScore(s => s - config.hintPenalty);
     const wordSplit = movie.title.split(' ');
     if (movie.title.length >= 6) {
       const masked = wordSplit
@@ -263,42 +262,24 @@ function GuessTheMovieGame({ region, onRegionChange }) {
         })
         .join(' ');
       setHintTitleValue(`Partial Title: ${masked}`);
-    } else {
-      setHintTitleValue("Partial title unavailable.");
-    }
+    } else { setHintTitleValue("Partial title unavailable."); }
   }
 
-  // PUBLIC_INTERFACE - Reveal answer, show all remaining hints
   function handleGiveUp() {
-    setReveal(true);
-    setStatus("");
-    setScore(s => s - 3);
+    setReveal(true); setStatus(""); setScore(s => s - 3);
     if (!hintActor) handleHintActor();
     if (!hintYear) handleHintYear();
     if (!hintTitle) handleHintTitle();
   }
 
   function handleNextLevel() {
-    setLevel(lvl => lvl + 1);
-    setRound(r => r + 1);
-    setMovie(null);
-    setStatus("");
-    setGuess("");
-    setReveal(false);
-    setError("");
-    resetHints();
+    setLevel(lvl => lvl + 1); setRound(r => r + 1);
+    setMovie(null); setStatus(""); setGuess(""); setReveal(false); setError(""); resetHints();
   }
 
   function handleRestartGame() {
-    setLevel(1);
-    setRound(r => r + 1);
-    setScore(INITIAL_SCORE);
-    setMovie(null);
-    setStatus("");
-    setGuess("");
-    setReveal(false);
-    setError("");
-    resetHints();
+    setLevel(1); setRound(r => r + 1); setScore(INITIAL_SCORE);
+    setMovie(null); setStatus(""); setGuess(""); setReveal(false); setError(""); resetHints();
   }
 
   function progressUI() {
@@ -339,10 +320,10 @@ function GuessTheMovieGame({ region, onRegionChange }) {
             <img
               src={`https://image.tmdb.org/t/p/w342${movie.poster_path}`}
               alt="Guess the movie from this poster"
-              width={170}
-              height={240}
+              width={120}
+              height={160}
               style={{
-                filter: reveal ? "none" : `blur(${config.blur}px) brightness(0.97) grayscale(0.07)`,
+                filter: reveal ? "none" : `blur(${config.blur}px) brightness(0.99) grayscale(0.07)`,
                 borderRadius: "14px",
                 boxShadow: !reveal ? "0 0 0 3px #f394ffcc, 0 3px 16px #1f1f4770" : "0 0 0 2px #8c42a8",
                 border: "1.5px solid #f394ff",
@@ -351,13 +332,12 @@ function GuessTheMovieGame({ region, onRegionChange }) {
                 objectFit: "cover",
               }}
             />
-            {/* Overlay success/fail */}
             {status === "success" && (
               <span style={{
                 position: "absolute", left: 0, top: 0, width: "100%", height: "100%",
                 borderRadius: "14px",
                 background: "rgba(243, 148, 255, 0.82)",
-                color: "#1f1f47", fontWeight: 700, fontSize: "1.38rem",
+                color: "#1f1f47", fontWeight: 700, fontSize: "1.13rem",
                 display: "flex", justifyContent: "center", alignItems: "center",
                 textShadow: "#fff 0 2px 8px",
                 zIndex: 2,
@@ -380,11 +360,10 @@ function GuessTheMovieGame({ region, onRegionChange }) {
                 ❌ Try Again! [-1]
               </span>
             )}
-            {/* Show the answer if revealed but not a win */}
             {reveal && status !== "success" && (
               <div style={{
                 position: "absolute", left: 0, bottom: "-37px", width: "100%",
-                color: "#1f1f47", fontWeight: 600, fontSize: "1.17rem",
+                color: "#1f1f47", fontWeight: 600, fontSize: "1.01rem",
                 display: "flex", justifyContent: "center", alignItems: "center",
                 textShadow: "#fff 0 2px 8px", background: "#f394ff33",
                 borderRadius: "0 0 12px 12px", padding: "6px 0",
@@ -415,8 +394,6 @@ function GuessTheMovieGame({ region, onRegionChange }) {
                   Guess
                 </button>
               </form>
-              
-              {/* Hints UI */}
               <div style={{ display: "flex", gap: "6px", marginTop: 6, marginBottom: 4, flexWrap: "wrap" }}>
                 <button
                   type="button"
@@ -449,7 +426,6 @@ function GuessTheMovieGame({ region, onRegionChange }) {
                   Partial Title {hintTitle && "✓"}
                 </button>
               </div>
-              {/* Show revealed hints */}
               <div>
                 {hintActor && (
                   <div style={{
@@ -470,7 +446,6 @@ function GuessTheMovieGame({ region, onRegionChange }) {
                   }}>{hintTitleValue}</div>
                 )}
               </div>
-              {/* Reveal answer */}
               <button className="btn" style={{ background: "#f394ff", color: "#1f1f47", marginTop: 5, fontSize: "0.97rem" }} type="button" onClick={handleGiveUp}>
                 Reveal Answer [-3]
               </button>
@@ -504,16 +479,16 @@ function GuessTheMovieGame({ region, onRegionChange }) {
   );
 }
 
-// Hidden Gems Explorer demo: show low-popularity, high-rated movies
-function HiddenGemsExplorer() {
-  const [gems, setGems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+// --- Hidden Gems Explorer ---
+function HiddenGemsExplorer({ regionConfig }) {
+  const [gems, setGems] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
   React.useEffect(() => {
     let isMounted = true;
     setLoading(true);
     setError("");
-    getHiddenGems()
+    getHiddenGems(1, regionConfig.language)
       .then(res => {
         if (isMounted) setGems(res.slice(0, 6));
       })
@@ -524,7 +499,7 @@ function HiddenGemsExplorer() {
         if (isMounted) setLoading(false);
       });
     return () => { isMounted = false; };
-  }, []);
+  }, [regionConfig.language]);
   return (
     <div style={{ width: "100%" }}>
       {loading && <div style={{ fontStyle: "italic" }}>Loading...</div>}
@@ -546,7 +521,7 @@ function HiddenGemsExplorer() {
       {!loading && !error && gems.length === 0 && (
         <div className="cinesphere-placeholder">
           <span>
-            Find real hidden gems: Low-popularity, high-rated movies from TMDb!
+            Find hidden gems: Low-popularity, high-rated {regionConfig.label} movies!
           </span>
         </div>
       )}
@@ -554,128 +529,90 @@ function HiddenGemsExplorer() {
   );
 }
 
-function CineSphereMainContainer() {
-  // Add language/region selection state at container level
-  const [regionMode, setRegionMode] = useState("ta"); // default Kollywood
-  // Persist mode across reloads using localStorage
-  React.useEffect(() => {
-    const saved = localStorage.getItem("regionMode");
-    if (saved && (saved === "en" || saved === "ta")) setRegionMode(saved);
-  }, []);
-  React.useEffect(() => {
-    localStorage.setItem("regionMode", regionMode);
-  }, [regionMode]);
+// -- Placeholder features for coming soon + label
+function PlaceholderFeature({ title }) {
+  return (
+    <div className="cinesphere-placeholder">
+      <span>
+        <strong>Coming Soon:</strong> {title}
+      </span>
+    </div>
+  );
+}
 
+// --- CineSphere Column as one region ---
+function CineSphereFeatureColumn({ regionConfig }) {
+  return (
+    <div className="cinesphere-feature-col sixcol">
+      <div className="cinesphere-feature-col-header">
+        <div className="cinesphere-feature-region-label">{regionConfig.label}</div>
+        <div className="cinesphere-feature-region-sub">{regionConfig.regionLabel}</div>
+      </div>
+      <div className="cinesphere-feature-box">
+        <h2 className="cinesphere-feature-title">Movie Mood Matcher</h2>
+        <div className="cinesphere-feature-desc">
+          Type your mood and get {regionConfig.label.toLowerCase()} matches.
+        </div>
+        <MovieMoodMatcher regionConfig={regionConfig} />
+      </div>
+      <div className="cinesphere-feature-box">
+        <h2 className="cinesphere-feature-title">Guess the Movie Game</h2>
+        <div className="cinesphere-feature-desc">
+          Blurred poster: guess the {regionConfig.label} movie title!
+        </div>
+        <GuessTheMovieGame regionConfig={regionConfig} />
+      </div>
+      <div className="cinesphere-feature-box">
+        <h2 className="cinesphere-feature-title">Hidden Gems Explorer</h2>
+        <div className="cinesphere-feature-desc">
+          Discover underrated {regionConfig.label} movies.
+        </div>
+        <HiddenGemsExplorer regionConfig={regionConfig} />
+      </div>
+      <div className="cinesphere-feature-box">
+        <h2 className="cinesphere-feature-title">Film Detective</h2>
+        <div className="cinesphere-feature-desc">
+          Enter clues like actor name, quote, or year to find the {regionConfig.label} movie.
+        </div>
+        <PlaceholderFeature title="Film Detective" />
+      </div>
+      <div className="cinesphere-feature-box">
+        <h2 className="cinesphere-feature-title">Binge Planner</h2>
+        <div className="cinesphere-feature-desc">
+          Plan your {regionConfig.label} movie or TV marathon.
+        </div>
+        <PlaceholderFeature title="Binge Planner" />
+      </div>
+      <div className="cinesphere-feature-box">
+        <h2 className="cinesphere-feature-title">Regional Movie Explorer</h2>
+        <div className="cinesphere-feature-desc">
+          Explore top {regionConfig.label} picks and rare finds.
+        </div>
+        <PlaceholderFeature title="Regional Movie Explorer" />
+      </div>
+      <div className="cinesphere-feature-box">
+        <h2 className="cinesphere-feature-title">Scene Breakdown Visualizer</h2>
+        <div className="cinesphere-feature-desc">
+          Visualize iconic scenes from {regionConfig.label} movies.
+        </div>
+        <PlaceholderFeature title="Scene Breakdown Visualizer" />
+      </div>
+    </div>
+  );
+}
+
+// --- Main CineSphere Container with six columns ---
+function CineSphereMainContainer() {
   return (
     <div className="cinesphere-main-container">
       <h1 className="cinesphere-title">CineSphere</h1>
-      <div className="cinesphere-feature-grid">
-        {/* Movie Mood Matcher */}
-        <div className="cinesphere-feature-col">
-          <div className="cinesphere-feature-box">
-            <h2 className="cinesphere-feature-title">Movie Mood Matcher</h2>
-            <div className="cinesphere-feature-desc">
-              Type your mood and get a list of movies that match it.
-            </div>
-            <MovieMoodMatcher />
-          </div>
-        </div>
-        {/* Guess the Movie Game */}
-        <div className="cinesphere-feature-col">
-          <div className="cinesphere-feature-box">
-            <h2 className="cinesphere-feature-title">Guess the Movie Game (Poster Edition)</h2>
-            <div className="cinesphere-feature-desc">
-              View a blurred movie poster and guess the movie title.
-            </div>
-            <div style={{ width: "100%", marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
-              <label htmlFor="lang-toggle" style={{ color: "#f394ff", marginRight: 8, fontWeight: 600 }}>Mode:</label>
-              <select
-                id="lang-toggle"
-                style={{
-                  padding: "5px 9px",
-                  borderRadius: 5,
-                  border: "1px solid #f394ff",
-                  background: "#faf5ff",
-                  fontWeight: 500
-                }}
-                value={regionMode}
-                onChange={(e) => setRegionMode(e.target.value)}
-              >
-                <option value="en">Hollywood (English)</option>
-                <option value="ta">Kollywood (Tamil)</option>
-              </select>
-            </div>
-            <GuessTheMovieGame region={regionMode}
-              onRegionChange={setRegionMode}
-            />
-          </div>
-        </div>
-        {/* Hidden Gems Explorer */}
-        <div className="cinesphere-feature-col">
-          <div className="cinesphere-feature-box">
-            <h2 className="cinesphere-feature-title">Hidden Gems Explorer</h2>
-            <div className="cinesphere-feature-desc">
-              Discover underrated or low-popularity movies with high ratings.
-            </div>
-            <HiddenGemsExplorer />
-          </div>
-        </div>
-        {/* Film Detective */}
-        <div className="cinesphere-feature-col">
-          <div className="cinesphere-feature-box">
-            <h2 className="cinesphere-feature-title">Film Detective</h2>
-            <div className="cinesphere-feature-desc">
-              Enter clues like actor name, quote, or year to find the movie.
-            </div>
-            <div className="cinesphere-placeholder">
-              <span>
-                <strong>Coming Soon:</strong> Film Detective
-              </span>
-            </div>
-          </div>
-        </div>
-        {/* Binge Planner */}
-        <div className="cinesphere-feature-col">
-          <div className="cinesphere-feature-box">
-            <h2 className="cinesphere-feature-title">Binge Planner</h2>
-            <div className="cinesphere-feature-desc">
-              Input available hours and get movie/TV show suggestions that fit exactly into that time.
-            </div>
-            <div className="cinesphere-placeholder">
-              <span>
-                <strong>Coming Soon:</strong> Binge Planner
-              </span>
-            </div>
-          </div>
-        </div>
-        {/* Regional Movie Explorer */}
-        <div className="cinesphere-feature-col">
-          <div className="cinesphere-feature-box">
-            <h2 className="cinesphere-feature-title">Regional Movie Explorer</h2>
-            <div className="cinesphere-feature-desc">
-              Filter and explore top-rated or rare movies by region or language.
-            </div>
-            <div className="cinesphere-placeholder">
-              <span>
-                <strong>Coming Soon:</strong> Regional Movie Explorer
-              </span>
-            </div>
-          </div>
-        </div>
-        {/* Scene Breakdown Visualizer */}
-        <div className="cinesphere-feature-col">
-          <div className="cinesphere-feature-box">
-            <h2 className="cinesphere-feature-title">Scene Breakdown Visualizer</h2>
-            <div className="cinesphere-feature-desc">
-              Visualize how a scene is built, including mood, lighting, camera angles, and plot points.
-            </div>
-            <div className="cinesphere-placeholder">
-              <span>
-                <strong>Coming Soon:</strong> Scene Breakdown Visualizer
-              </span>
-            </div>
-          </div>
-        </div>
+      <div className="cinesphere-feature-grid sixcol-grid">
+        {CINE_COLUMNS.map(regionConfig => (
+          <CineSphereFeatureColumn
+            key={regionConfig.key}
+            regionConfig={regionConfig}
+          />
+        ))}
       </div>
     </div>
   );

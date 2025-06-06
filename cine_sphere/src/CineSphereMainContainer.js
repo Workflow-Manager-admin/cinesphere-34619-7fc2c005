@@ -259,29 +259,52 @@ function FeatureBox({ title, desc, children }) {
   );
 }
 
-// Horizontal "What to watch" row: 4 features side by side (responsive)
-function WhatToWatchRow({ regionConfig }) {
+/**
+ * WhatToWatchGrid - Displays "What to watch" features in a 2x2 grid (two rows, two columns per row).
+ * Each card/feature is responsive and preserves mobile usability.
+ */
+function WhatToWatchGrid({ regionConfig }) {
   return (
-    <div className="cinesphere-row-list">
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(2, 1fr)",
+        gridGap: 28,
+        padding: "15px 4px 18px 4px",
+        background: "#fcfcfc",
+        borderRadius: "0 0 18px 18px",
+        boxShadow: "0 2px 9px #b5aac228",
+        width: "100%",
+      }}
+      className="cinesphere-row-list cinesphere-what2watch-grid"
+    >
       <FeatureBox
         title="Hidden Gems Explorer"
         desc={`Discover underrated ${regionConfig.label} movies.`}
-      ><HiddenGemsExplorer regionConfig={regionConfig} /></FeatureBox>
+      >
+        <HiddenGemsExplorer regionConfig={regionConfig} />
+      </FeatureBox>
 
       <FeatureBox
         title="Movie Mood Matcher"
         desc={`Type your mood and get ${regionConfig.label.toLowerCase()} matches.`}
-      ><MovieMoodMatcher regionConfig={regionConfig} /></FeatureBox>
+      >
+        <MovieMoodMatcher regionConfig={regionConfig} />
+      </FeatureBox>
 
       <FeatureBox
         title="Regional Movie Explorer"
         desc={`Explore top ${regionConfig.label} picks and rare finds.`}
-      ><PlaceholderFeature title="Regional Movie Explorer" /></FeatureBox>
+      >
+        <PlaceholderFeature title="Regional Movie Explorer" />
+      </FeatureBox>
 
       <FeatureBox
         title="Binge Planner"
         desc={`Plan your ${regionConfig.label} movie or TV marathon.`}
-      ><PlaceholderFeature title="Binge Planner" /></FeatureBox>
+      >
+        <PlaceholderFeature title="Binge Planner" />
+      </FeatureBox>
     </div>
   );
 }
@@ -319,7 +342,7 @@ function CineSphereMainContainer({ selectedRegion }) {
       <div className="cinesphere-main-horiz">
         <section className="cinesphere-horiz-section">
           <div className="cinesphere-row-label">What to watch</div>
-          <WhatToWatchRow regionConfig={selectedRegion} />
+          <WhatToWatchGrid regionConfig={selectedRegion} />
         </section>
         <section className="cinesphere-horiz-section">
           <div className="cinesphere-row-label">Games</div>

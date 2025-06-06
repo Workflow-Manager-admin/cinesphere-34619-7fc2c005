@@ -605,19 +605,30 @@ function CineSphereFeatureColumn({ regionConfig }) {
   );
 }
 
-// --- Main CineSphere Container with six columns ---
-function CineSphereMainContainer() {
+/**
+ * PUBLIC_INTERFACE
+ * CineSphereMainContainer
+ * If selectedRegion prop is set, only show the features column for that single region (stacked UX).
+ * If not set, show the original grid for all regions (legacy/demo).
+ */
+function CineSphereMainContainer({ selectedRegion }) {
   return (
     <div className="cinesphere-main-container">
       <h1 className="cinesphere-title">CineSphere</h1>
-      <div className="cinesphere-feature-grid sixcol-grid">
-        {CINE_COLUMNS.map(regionConfig => (
-          <CineSphereFeatureColumn
-            key={regionConfig.key}
-            regionConfig={regionConfig}
-          />
-        ))}
-      </div>
+      {selectedRegion ? (
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <CineSphereFeatureColumn regionConfig={selectedRegion} />
+        </div>
+      ) : (
+        <div className="cinesphere-feature-grid sixcol-grid">
+          {CINE_COLUMNS.map(regionConfig => (
+            <CineSphereFeatureColumn
+              key={regionConfig.key}
+              regionConfig={regionConfig}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

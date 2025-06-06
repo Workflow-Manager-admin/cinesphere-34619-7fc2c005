@@ -4,12 +4,16 @@ import { searchMovies, getHiddenGems } from "./tmdbApi";
 
 /**
  * PUBLIC_INTERFACE
- * CineSphereMainContainer displays six main cinema-industry columns,
- * each containing all seven CineSphere features, parameterized by region/language.
- * Features dynamically fetch region-appropriate data.
+ * CineSphereMainContainer displays six main regional industry columns (Hollywood, Bollywood, Kollywood, Tollywood, Sandalwood, Mollywood).
+ * Each column vertically stacks all seven CineSphere features, parameterized by region/language.
+ * All features fetch or filter movie data according to the given regional/language context.
+ * 
+ * Responsive layout: On large screens, columns appear side by side; on tablets and mobile, columns stack vertically.
+ * 
+ * Edits: Added inline explanatory comments and improved clarity for future maintainability.
  */
 
-// -- Configs for the six major regional columns --
+// -- Configuration for the six major regional columns --
 const CINE_COLUMNS = [
   {
     key: "hollywood",

@@ -405,16 +405,62 @@ function GuessTheMovieGame() {
                   Guess
                 </button>
               </form>
-              <button type="button" className="btn" style={{ background: "#dfa7ff", color: "#1f1f47", marginBottom: 0, fontSize: "0.98rem", marginLeft: 9 }} onClick={handleHint} disabled={hintsUsed>=3} title="Show a hint!">
-                Hint{hintsUsed>0 && ` (${hintsUsed})`}
-              </button>
-              {hint && (
-                <div style={{
-                  marginTop: 7, color: "#f394ff", background: "#f6eaff", border: "1.5px solid #f394ff66", borderRadius: 7, fontSize: "0.98rem", padding: "0.5em 0.9em"
-                }}>
-                  {hint}
-                </div>
-              )}
+              
+              {/* Hints UI */}
+              <div style={{ display: "flex", gap: "6px", marginTop: 6, marginBottom: 4, flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  className="btn"
+                  style={{ background: "#b8b8ff", color: "#1f1f47", fontSize: "0.97rem" }}
+                  onClick={handleHintActor}
+                  disabled={hintActor}
+                  title="Reveal the lead actor"
+                >
+                  Lead Actor {hintActor && "✓"}
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  style={{ background: "#b8c2fd", color: "#1f1f47", fontSize: "0.97rem" }}
+                  onClick={handleHintYear}
+                  disabled={hintYear}
+                  title="Reveal the release year"
+                >
+                  Release Year {hintYear && "✓"}
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  style={{ background: "#d7b3fa", color: "#1f1f47", fontSize: "0.97rem" }}
+                  onClick={handleHintTitle}
+                  disabled={hintTitle}
+                  title="Show a partial version of the title"
+                >
+                  Partial Title {hintTitle && "✓"}
+                </button>
+              </div>
+              {/* Show revealed hints */}
+              <div>
+                {hintActor && (
+                  <div style={{
+                    color: "#f394ff", background: "#f6eaff", border: "1.2px solid #f394ff60", borderRadius: 7, fontSize: "0.98rem", padding: "0.33em 0.8em",
+                    marginBottom: 2
+                  }}>{hintActorValue}</div>
+                )}
+                {hintYear && (
+                  <div style={{
+                    color: "#f394ff", background: "#eef4ff", border: "1.2px solid #b8c2fd", borderRadius: 7, fontSize: "0.98rem", padding: "0.33em 0.8em",
+                    marginBottom: 2
+                  }}>{hintYearValue}</div>
+                )}
+                {hintTitle && (
+                  <div style={{
+                    color: "#d7b3fa", background: "#f6eefb", border: "1.2px solid #d7b3fa66", borderRadius: 7, fontSize: "0.98rem", padding: "0.33em 0.8em",
+                    marginBottom: 2
+                  }}>{hintTitleValue}</div>
+                )}
+              </div>
+              {/* Reveal answer */}
               <button className="btn" style={{ background: "#f394ff", color: "#1f1f47", marginTop: 5, fontSize: "0.97rem" }} type="button" onClick={handleGiveUp}>
                 Reveal Answer [-3]
               </button>

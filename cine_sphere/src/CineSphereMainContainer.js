@@ -142,7 +142,10 @@ function MovieMoodMatcher({ regionConfig }) {
         {!loading && !error && movies.length === 0 && (
           <div className="cinesphere-placeholder">
             <span>
-              Try a mood keyword — Get instant {regionConfig.label} picks!
+              {tmdb.language === "ta"
+                ? "No movies match your mood in Kollywood right now. Try a different mood or keyword!"
+                : `Try a mood keyword — Get instant ${regionConfig.label} picks!`
+              }
             </span>
           </div>
         )}

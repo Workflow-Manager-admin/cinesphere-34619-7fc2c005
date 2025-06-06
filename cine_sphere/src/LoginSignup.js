@@ -1,32 +1,27 @@
 import React, { useState } from "react";
 import "./App.css";
 
-// Helper: defaults for themed colors
+// Helper: theme colors
 const THEME = {
   primary: "#1f1f47",
   accent: "#fcfcfc",
   secondary: "#f394ff",
 };
 
-function validateEmail(email) {
-  // Very basic email 'validation'
-  return /\S+@\S+\.\S+/.test(email);
-}
-
 // PUBLIC_INTERFACE
 function LoginSignup({ onAuth }) {
   const [mode, setMode] = useState("login"); // "login" or "signup"
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [pwRepeat, setPwRepeat] = useState("");
   const [error, setError] = useState("");
 
-  // Simulate sign-up: save to localStorage
+  // Simulate sign-up: save to localStorage (by username)
   function handleSignup(e) {
     e.preventDefault();
     setError("");
-    if (!validateEmail(email)) {
-      setError("Invalid email address.");
+    if (username.trim().length < 2) {
+      setError("Username should be at least 2 characters.");
       return;
     }
     if (password.length < 4) {
@@ -39,38 +34,34 @@ function LoginSignup({ onAuth }) {
     }
     // Check if user exists
     const users = JSON.parse(localStorage.getItem("cinesphere_users") || "{}");
-    if (users[email]) {
+    if (users[username]) {
       setError("User already exists. Try logging in.");
       return;
     }
-    users[email] = { password };
+    users[username] = { password };
     localStorage.setItem("cinesphere_users", JSON.stringify(users));
-    localStorage.setItem("cinesphere_auth", JSON.stringify({ email }));
-    onAuth({ email });
+    localStorage.setItem("cinesphere_auth", JSON.stringify({ username }));
+    onAuth({ username });
   }
 
-  // Simulate login: check from localStorage
+  // Simulate login: check from localStorage (by username)
   function handleLogin(e) {
     e.preventDefault();
     setError("");
-    if (!validateEmail(email)) {
-      setError("Invalid email address.");
-      return;
-    }
     const users = JSON.parse(localStorage.getItem("cinesphere_users") || "{}");
-    if (!users[email] || users[email].password !== password) {
-      setError("Incorrect email or password.");
+    if (!users[username] || users[username].password !== password) {
+      setError("Incorrect username or password.");
       return;
     }
-    localStorage.setItem("cinesphere_auth", JSON.stringify({ email }));
-    onAuth({ email });
+    localStorage.setItem("cinesphere_auth", JSON.stringify({ username }));
+    onAuth({ username });
   }
 
   // Switch between login/signup UI
   function switchMode() {
     setError("");
     setMode(mode === "login" ? "signup" : "login");
-    setEmail("");
+    setUsername("");
     setPassword("");
     setPwRepeat("");
   }
@@ -164,14 +155,16 @@ function LoginSignup({ onAuth }) {
             {error}
           </div>
         )}
+
         <input
-          name="email"
-          type="email"
+          name="username"
+          type="text"
           autoComplete="username"
-          placeholder="Email"
+          placeholder="Username"
           style={inputStyle}
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          minLength={2}
           required
         />
         <input
@@ -192,6 +185,7 @@ function LoginSignup({ onAuth }) {
             autoComplete="new-password"
             placeholder="Repeat Password"
             style={inputStyle}
+            minLength={4}
             value={pwRepeat}
             onChange={(e) => setPwRepeat(e.target.value)}
             required

@@ -555,7 +555,17 @@ function HiddenGemsExplorer() {
 }
 
 function CineSphereMainContainer() {
-  // Column order and labeling is preserved from the original design.
+  // Add language/region selection state at container level
+  const [regionMode, setRegionMode] = useState("ta"); // default Kollywood
+  // Persist mode across reloads using localStorage
+  React.useEffect(() => {
+    const saved = localStorage.getItem("regionMode");
+    if (saved && (saved === "en" || saved === "ta")) setRegionMode(saved);
+  }, []);
+  React.useEffect(() => {
+    localStorage.setItem("regionMode", regionMode);
+  }, [regionMode]);
+
   return (
     <div className="cinesphere-main-container">
       <h1 className="cinesphere-title">CineSphere</h1>
@@ -577,7 +587,27 @@ function CineSphereMainContainer() {
             <div className="cinesphere-feature-desc">
               View a blurred movie poster and guess the movie title.
             </div>
-            <GuessTheMovieGame />
+            <div style={{ width: "100%", marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+              <label htmlFor="lang-toggle" style={{ color: "#f394ff", marginRight: 8, fontWeight: 600 }}>Mode:</label>
+              <select
+                id="lang-toggle"
+                style={{
+                  padding: "5px 9px",
+                  borderRadius: 5,
+                  border: "1px solid #f394ff",
+                  background: "#faf5ff",
+                  fontWeight: 500
+                }}
+                value={regionMode}
+                onChange={(e) => setRegionMode(e.target.value)}
+              >
+                <option value="en">Hollywood (English)</option>
+                <option value="ta">Kollywood (Tamil)</option>
+              </select>
+            </div>
+            <GuessTheMovieGame region={regionMode}
+              onRegionChange={setRegionMode}
+            />
           </div>
         </div>
         {/* Hidden Gems Explorer */}

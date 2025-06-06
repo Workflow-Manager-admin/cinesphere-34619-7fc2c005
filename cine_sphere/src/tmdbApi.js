@@ -16,22 +16,22 @@ const TMDB_API_KEY = "5bc67d3b06aecbd18121a3cbbc16eb59";
  * @return {Promise<Array>} List of movie objects (filtered for given language)
  */
 export async function searchMovies(query, page = 1, language = "ta", region = "IN") {
-    // region is optional in TMDb API, but useful for Bollywood and other Indian industries (also needed for Hollywood)
+    // NOTE: TMDb 'search/movie' does NOT support &with_original_language=<code>, that's only for 'discover'.
+    // Use only &language and &region params; post-filter results for original_language.
     const url = `${TMDB_API_URL}/search/movie?api_key=${TMDB_API_KEY}` +
         `&query=${encodeURIComponent(query)}` +
         `&page=${page}` +
         `&language=${language}` +
         `&region=${region}` +
-        `&with_original_language=${language}` +
         `&include_adult=false`;
 
     const res = await fetch(url);
     if (!res.ok) throw new Error("TMDb searchMovies failed");
     const data = await res.json();
 
-    // Filter for language and if region is IN, also allow Indian local languages; for Hollywood use en only.
+    // Filter strictly for original_language (post-filter on client; required for Tamil etc.)
     return (data.results || []).filter(
-        m => m.original_language === language
+        m => m && m.original_language && m.original_language.toLowerCase() === language.toLowerCase()
     );
 }
 

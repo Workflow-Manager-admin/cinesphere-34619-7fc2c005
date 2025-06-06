@@ -326,12 +326,18 @@ function GamesRow({ regionConfig }) {
   );
 }
 
-// ---- Main Container "after region selection" ----
+/**
+ * PUBLIC_INTERFACE
+ * CineSphereMainContainer
+ * Only displays feature UI (not region/language selection). When no region is selected, 
+ * it should not render the feature grid at all (responsibility for language selection
+ * is elsewhere). The 2x2 grid is used ONLY after a region is selected.
+ */
 function CineSphereMainContainer({ selectedRegion }) {
-  if (!selectedRegion)
-    return (
-      <div className="cinesphere-main-container" style={{paddingTop:60}}><div>No region selected.</div></div>
-    );
+  // If no region selected, render nothing (App handles region/language selection UI)
+  if (!selectedRegion) {
+    return null;
+  }
 
   return (
     <div className="cinesphere-main-container">

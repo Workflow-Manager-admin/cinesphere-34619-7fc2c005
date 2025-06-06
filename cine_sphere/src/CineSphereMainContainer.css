@@ -89,6 +89,10 @@
 }
 
 /* -- 2x2 "What to watch" custom grid styles override for the new layout -- */
+/* 
+ * .cinesphere-what2watch-grid
+ * This grid is for feature display only (never for language/region selection!).
+ */
 .cinesphere-what2watch-grid {
   display: grid !important;
   grid-template-columns: repeat(2, 1fr);

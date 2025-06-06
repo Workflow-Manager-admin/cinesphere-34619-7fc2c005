@@ -608,16 +608,93 @@ function CineSphereFeatureColumn({ regionConfig }) {
 /**
  * PUBLIC_INTERFACE
  * CineSphereMainContainer
- * If selectedRegion prop is set, only show the features column for that single region (stacked UX).
+ * If selectedRegion prop is set, only show the features for that region,
+ * divided into two horizontal columns:
+ *   - Left: What to Watch (Hidden Gems Explorer, Movie Mood Matcher, Regional Movie Explorer, Binge Planner)
+ *   - Right: Games (Film Detective, Guess the Movie Game)
+ * The columns should be responsive and side by side.
  * If not set, show the original grid for all regions (legacy/demo).
  */
+
+// ---- Reusable minimal feature wrappers (from above) ----
+// ... MovieMoodMatcher, GuessTheMovieGame, HiddenGemsExplorer, PlaceholderFeature remain unchanged ...
+
+// -- "What to Watch" column content for selected region --
+function WhatToWatchColumn({ regionConfig }) {
+  return (
+    <div className="cinesphere-twocol what-to-watch-col">
+      <div className="cinesphere-feature-col-header">
+        <div className="cinesphere-feature-region-label">{regionConfig.label}</div>
+        <div className="cinesphere-feature-region-sub">{regionConfig.regionLabel}</div>
+      </div>
+      {/* Hidden Gems Explorer */}
+      <div className="cinesphere-feature-box">
+        <h2 className="cinesphere-feature-title">Hidden Gems Explorer</h2>
+        <div className="cinesphere-feature-desc">
+          Discover underrated {regionConfig.label} movies.
+        </div>
+        <HiddenGemsExplorer regionConfig={regionConfig} />
+      </div>
+      {/* Movie Mood Matcher */}
+      <div className="cinesphere-feature-box">
+        <h2 className="cinesphere-feature-title">Movie Mood Matcher</h2>
+        <div className="cinesphere-feature-desc">
+          Type your mood and get {regionConfig.label.toLowerCase()} matches.
+        </div>
+        <MovieMoodMatcher regionConfig={regionConfig} />
+      </div>
+      {/* Regional Movie Explorer */}
+      <div className="cinesphere-feature-box">
+        <h2 className="cinesphere-feature-title">Regional Movie Explorer</h2>
+        <div className="cinesphere-feature-desc">
+          Explore top {regionConfig.label} picks and rare finds.
+        </div>
+        <PlaceholderFeature title="Regional Movie Explorer" />
+      </div>
+      {/* Binge Planner */}
+      <div className="cinesphere-feature-box">
+        <h2 className="cinesphere-feature-title">Binge Planner</h2>
+        <div className="cinesphere-feature-desc">
+          Plan your {regionConfig.label} movie or TV marathon.
+        </div>
+        <PlaceholderFeature title="Binge Planner" />
+      </div>
+    </div>
+  );
+}
+
+// -- "Games" column content for selected region --
+function GamesColumn({ regionConfig }) {
+  return (
+    <div className="cinesphere-twocol games-col">
+      {/* Film Detective */}
+      <div className="cinesphere-feature-box">
+        <h2 className="cinesphere-feature-title">Film Detective</h2>
+        <div className="cinesphere-feature-desc">
+          Enter clues like actor name, quote, or year to find the {regionConfig.label} movie.
+        </div>
+        <PlaceholderFeature title="Film Detective" />
+      </div>
+      {/* Guess the Movie Game */}
+      <div className="cinesphere-feature-box">
+        <h2 className="cinesphere-feature-title">Guess the Movie Game</h2>
+        <div className="cinesphere-feature-desc">
+          Blurred poster: guess the {regionConfig.label} movie title!
+        </div>
+        <GuessTheMovieGame regionConfig={regionConfig} />
+      </div>
+    </div>
+  );
+}
+
 function CineSphereMainContainer({ selectedRegion }) {
   return (
     <div className="cinesphere-main-container">
       <h1 className="cinesphere-title">CineSphere</h1>
       {selectedRegion ? (
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <CineSphereFeatureColumn regionConfig={selectedRegion} />
+        <div className="cinesphere-feature-twocol-wrapper">
+          <WhatToWatchColumn regionConfig={selectedRegion} />
+          <GamesColumn regionConfig={selectedRegion} />
         </div>
       ) : (
         <div className="cinesphere-feature-grid sixcol-grid">

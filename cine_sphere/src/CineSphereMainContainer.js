@@ -79,6 +79,196 @@ function MovieMoodMatcher() {
   );
 }
 
+/**
+ * PUBLIC_INTERFACE
+ * GuessTheMovieGame - Interactive game to guess a TMDb movie from a blurred poster.
+ */
+function GuessTheMovieGame() {
+  const [movie, setMovie] = React.useState(null); // { poster_path, title }
+  const [guess, setGuess] = React.useState("");
+  const [status, setStatus] = React.useState(""); // "success" | "fail" | ""
+  const [loading, setLoading] = React.useState(false);
+  const [reveal, setReveal] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const [requestId, setRequestId] = React.useState(0);
+
+  // Fetches a random popular movie with poster
+  async function fetchRandomMovie() {
+    setLoading(true);
+    setError("");
+    setReveal(false);
+    setStatus("");
+    setGuess("");
+    try {
+      // Try up to 5 times to get a poster
+      let found = null;
+      for (let tries = 0; tries < 5; tries++) {
+        // Grab a random page (TMDb allows 1-500 for popularity): randomizing increases randomness
+        const page = Math.floor(Math.random() * 30) + 1;
+        const url = `https://api.themoviedb.org/3/movie/popular?api_key=5bc67d3b06aecbd18121a3cbbc16eb59&page=${page}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Failed to load movie posters.");
+        const data = await res.json();
+        const posters = data.results.filter(m => m.poster_path && m.title && !m.adult);
+        if (posters.length > 0) {
+          found = posters[Math.floor(Math.random() * posters.length)];
+          break;
+        }
+      }
+      if (!found) throw new Error("No poster found. Try again!");
+      setMovie(found);
+    } catch (err) {
+      setError("Could not get movie poster. Try again later.");
+      setMovie(null);
+    }
+    setLoading(false);
+  }
+
+  React.useEffect(() => {
+    fetchRandomMovie();
+    // Dependency "requestId" allows user to restart round.
+    // eslint-disable-next-line
+  }, [requestId]);
+
+  function handleGuess(e) {
+    e.preventDefault();
+    if (!movie) return;
+    // Fuzzy match: case-insensitive, ignore punctuation, whitespace
+    function clean(s) {
+      return s.replace(/\W/g, '').toLowerCase();
+    }
+    if (clean(guess) === clean(movie.title)) {
+      setStatus("success");
+      setReveal(true);
+    } else {
+      setStatus("fail");
+      setReveal(false);
+    }
+  }
+
+  function handleGiveUp() {
+    setReveal(true);
+    setStatus("");
+  }
+
+  function handleRestart() {
+    setMovie(null);
+    setRequestId(prev => prev + 1);
+    setStatus("");
+    setGuess("");
+    setReveal(false);
+    setError("");
+  }
+
+  return (
+    <div style={{ width: "100%", minHeight: 260, display: "flex", flexDirection: "column", alignItems: "center" }}>
+      {loading && (
+        <div style={{ fontStyle: "italic", fontWeight: 500, color: "#8c42a8", margin: "22px 0" }}>Loading a mystery poster...</div>
+      )}
+      {error && (
+        <div style={{ color: "#fff0ee", background: "#e34", borderRadius: 6, padding: "8px 12px", fontSize: "0.98rem", margin: "18px 0" }}>{error}</div>
+      )}
+      {!loading && movie && (
+        <div style={{
+          width: "100%", display: "flex", flexDirection: "column", alignItems: "center"
+        }}>
+          <div style={{ position: "relative", margin: "0 0 18px 0" }}>
+            <img
+              src={`https://image.tmdb.org/t/p/w342${movie.poster_path}`}
+              alt="Guess the movie from this poster"
+              width={170}
+              height={240}
+              style={{
+                filter: reveal ? "none" : "blur(16px) brightness(0.97) grayscale(0.07)",
+                borderRadius: "14px",
+                boxShadow: !reveal ? "0 0 0 3px #f394ffcc, 0 3px 16px #1f1f4770" : "0 0 0 2px #8c42a8",
+                border: "1.5px solid #f394ff",
+                background: "#f6eaff",
+                transition: "filter 0.4s cubic-bezier(.6,.8,.4,1)",
+                objectFit: "cover",
+              }}
+            />
+            {/* Overlay success/fail */}
+            {status === "success" && (
+              <span style={{
+                position: "absolute", left: 0, top: 0, width: "100%", height: "100%",
+                borderRadius: "14px",
+                background: "rgba(243, 148, 255, 0.78)",
+                color: "#1f1f47", fontWeight: 700, fontSize: "1.4rem",
+                display: "flex", justifyContent: "center", alignItems: "center",
+                textShadow: "#fff 0 2px 8px",
+                zIndex: 2,
+              }}>
+                🎉 Correct!
+              </span>
+            )}
+            {status === "fail" && (
+              <span style={{
+                position: "absolute", left: 0, top: 0, width: "100%", height: "100%",
+                borderRadius: "14px",
+                background: "rgba(255,255,255,0.68)",
+                color: "#de2072", fontWeight: 700, fontSize: "1.1rem",
+                display: "flex", justifyContent: "center", alignItems: "center",
+                zIndex: 2, textShadow: "#fff 0 2px 11px",
+                border: "1.5px solid #de2072"
+              }}>
+                ❌ Try Again!
+              </span>
+            )}
+            {/* Show the answer if revealed but not a win */}
+            {reveal && status !== "success" && (
+              <div style={{
+                position: "absolute", left: 0, bottom: "-37px", width: "100%",
+                color: "#1f1f47", fontWeight: 600, fontSize: "1.17rem",
+                display: "flex", justifyContent: "center", alignItems: "center",
+                textShadow: "#fff 0 2px 8px", background: "#f394ff33",
+                borderRadius: "0 0 12px 12px", padding: "6px 0",
+                zIndex: 2, borderTop: "1.5px solid #8c42a8"
+              }}>
+                🎬 <span style={{marginLeft: 5}}>{movie.title}</span>
+              </div>
+            )}
+          </div>
+          {!reveal && (
+            <form onSubmit={handleGuess} style={{ width: "90%", display: "flex", alignItems: "center", marginBottom: 9 }}>
+              <input
+                aria-label="Guess the movie title"
+                type="text"
+                style={{
+                  padding: 8, fontSize: 15, borderRadius: 6, border: "1.5px solid #f394ff",
+                  width: "70%", marginRight: 7, outline: status==="fail"?"2px solid #de2072":"none"
+                }}
+                placeholder="Type your guess…"
+                value={guess}
+                onChange={e => { setGuess(e.target.value); setStatus(""); }}
+                disabled={loading}
+                spellCheck={false}
+                autoComplete="off"
+              />
+              <button className="btn" style={{ padding: "8px 22px" }} type="submit" disabled={loading || !guess.trim()}>
+                Guess
+              </button>
+            </form>
+          )}
+          {!reveal && (
+            <button className="btn" style={{ background: "#f394ff", color: "#1f1f47", marginTop: 4, fontSize: "0.97rem" }} type="button" onClick={handleGiveUp}>
+              Reveal Answer
+            </button>
+          )}
+          {(reveal || status === "success") && (
+            <button className="btn" style={{ background: "#1f1f47", color: "#f394ff", marginTop: 16, fontSize: "1.01rem" }} type="button" onClick={handleRestart}>
+              Play Again
+            </button>
+          )}
+        </div>
+      )}
+      {!loading && !movie && !error && (
+        <div style={{ marginTop: 24, padding: "16px 6px", color: "#f394ff" }}>No poster available. <button className="btn" style={{marginLeft: 4}} onClick={handleRestart}>Retry</button></div>
+      )}
+    </div>
+  );
+}
+
 // Hidden Gems Explorer demo: show low-popularity, high-rated movies
 function HiddenGemsExplorer() {
   const [gems, setGems] = useState([]);
@@ -153,42 +343,7 @@ function CineSphereMainContainer() {
             <div className="cinesphere-feature-desc">
               View a blurred movie poster and guess the movie title.
             </div>
-            <div
-              className="cinesphere-placeholder"
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                padding: '22px 14px',
-                marginTop: 22,
-                fontSize: '1.19rem',
-                background: 'linear-gradient(95deg,#f394ffa0 0%,#fcfcfc 70%)',
-                color: '#1f1f47',
-                border: '2.5px dashed #f394ff',
-                fontWeight: 600,
-                letterSpacing: '.2px',
-                boxShadow: '0 2px 10px 0 #f394ff21',
-              }}
-            >
-              <span style={{
-                fontWeight: 700,
-                color: '#e45cf7',
-                fontSize: '1.27rem',
-                marginBottom: 8,
-                letterSpacing: '0.2px',
-              }}>
-                🚧 Coming Soon!
-              </span>
-              <span style={{ color: '#1f1f47', opacity: 0.92, fontWeight: 500, fontSize: '1.07rem' }}>
-                Guess the Movie Game <br />
-                <span style={{ fontSize: '0.98rem', fontStyle: 'italic', color: '#7a2c91', display: 'block', marginTop: 7 }}>
-                  (Poster Edition)
-                </span>
-              </span>
-              <span style={{ color: '#8c42a8', marginTop: 14, fontSize: '0.96rem', fontWeight: 400 }}>
-                Challenge yourself to identify movies from their mystery posters — launching soon!
-              </span>
-            </div>
+            <GuessTheMovieGame />
           </div>
         </div>
         {/* Hidden Gems Explorer */}

@@ -45,8 +45,45 @@ function MovieMoodMatcher({ regionConfig }) {
     setLoading(false);
   }, [regionConfig.key, regionConfig.language, regionConfig.region]);
 
+  // Track previous query for trigger logic
+  const prevQuery = React.useRef('');
+  const prevTmdbKey = React.useRef(tmdb.language + "-" + tmdb.region);
+
   // PUBLIC_INTERFACE
   // Mood matcher now uses TMDb and returns region/language-appropriate movies.
+
+  // Always update search results when query or regionConfig changes, so UI is always up to date.
+  React.useEffect(() => {
+    // only fetch if query is not empty (don't auto-search on reset)
+    if (!query.trim()) {
+      setMovies([]);
+      setError("");
+      setLoading(false);
+      return;
+    }
+    // If the region or language changes, re-run the query for new region.
+    let cancelled = false;
+    async function autoFetch() {
+      setLoading(true);
+      setError("");
+      try {
+        const res = await searchMovies(query.trim(), 1, tmdb.language, tmdb.region);
+        if (!cancelled) setMovies(res.slice(0, 8));
+      } catch {
+        if (!cancelled) {
+          setError("Failed to fetch movies.");
+          setMovies([]);
+        }
+      }
+      if (!cancelled) setLoading(false);
+    }
+    autoFetch();
+    return () => {
+      cancelled = true;
+    };
+    // Include region keys as deps
+  }, [query, tmdb.language, tmdb.region]);
+
   async function handleSearch(e) {
     e.preventDefault();
     if (!query.trim()) return;

@@ -27,17 +27,52 @@
 
 .cinesphere-feature-grid {
   display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
-  gap: 24px;
+  gap: 22px;
   justify-content: center;
+  align-items: flex-start;
 }
 
-.cinesphere-feature-col {
-  flex: 1 1 260px;
-  min-width: 260px;
-  max-width: 340px;
+.cinesphere-feature-grid.sixcol-grid {
+  gap: 22px;
+  flex-wrap: wrap;
+}
+
+.cinesphere-feature-col.sixcol {
+  min-width: 300px;
+  max-width: 330px;
+  width: 100%;
   display: flex;
+  flex-direction: column;
+  gap: 13px;
   align-items: stretch;
+  flex: 1 1 300px;
+  background: none;
+  border-radius: 14px;
+  /* margin: 7px; */
+}
+
+.cinesphere-feature-col-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 6px;
+}
+
+.cinesphere-feature-region-label {
+  color: var(--cine-secondary);
+  font-size: 1.23rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  margin-top: 0;
+}
+
+.cinesphere-feature-region-sub {
+  color: #8473a5;
+  font-size: 0.91rem;
+  font-weight: 500;
+  margin-bottom: 2px;
 }
 
 .cinesphere-feature-box {
@@ -85,20 +120,64 @@
   border: 1px dashed var(--cine-secondary);
 }
 
-@media (max-width: 1200px) {
-  .cinesphere-feature-grid {
+@media (max-width: 1500px) {
+  .cinesphere-feature-grid.sixcol-grid {
     flex-wrap: wrap;
     gap: 18px;
+  }
+  .cinesphere-feature-col.sixcol {
+    min-width: 300px;
+    max-width: 1fr;
+    flex: 1 1 300px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .cinesphere-feature-grid.sixcol-grid {
+    gap: 11px;
+  }
+  .cinesphere-feature-col.sixcol {
+    min-width: 260px;
+    max-width: 480px;
+    flex: 1 1 100%;
   }
 }
 
 @media (max-width: 950px) {
-  .cinesphere-feature-grid {
+  .cinesphere-feature-grid.sixcol-grid {
     flex-direction: column;
+    gap: 12px;
     align-items: stretch;
   }
-  .cinesphere-feature-col {
+  .cinesphere-feature-col.sixcol {
     max-width: none;
     min-width: 0;
+    width: 98vw;
+    margin: 0 auto 18px auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .cinesphere-feature-col.sixcol,
+  .cinesphere-main-container {
+    padding: 0 2vw;
+  }
+  .cinesphere-feature-box {
+    padding: 17px 6px 13px 6px;
+  }
+  .cinesphere-feature-region-label {
+    font-size: 1.11rem;
+  }
+}
+
+@media (max-width: 510px) {
+  .cinesphere-feature-col.sixcol {
+    min-width: 178px;
+    width: 99vw;
+    margin: 0 auto 18px auto;
+    gap: 7px;
+  }
+  .cinesphere-title {
+    font-size: 1.31rem;
   }
 }

@@ -1,0 +1,104 @@
+:root {
+  --cine-primary: #1f1f47;
+  --cine-secondary: #f394ff;
+  --cine-accent: #fcfcfc;
+  --cine-dark: #141436;
+}
+
+/* Main CineSphere container override */
+.cinesphere-main-container {
+  background: var(--cine-accent);
+  min-height: 100vh;
+  padding: 48px 24px 32px 24px;
+  box-sizing: border-box;
+  color: var(--cine-primary);
+  font-family: 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+}
+
+.cinesphere-title {
+  color: var(--cine-primary);
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 36px;
+  letter-spacing: 1px;
+}
+
+.cinesphere-feature-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  justify-content: center;
+}
+
+.cinesphere-feature-col {
+  flex: 1 1 260px;
+  min-width: 260px;
+  max-width: 340px;
+  display: flex;
+  align-items: stretch;
+}
+
+.cinesphere-feature-box {
+  background: var(--cine-primary);
+  color: var(--cine-accent);
+  border-radius: 18px;
+  box-shadow: 0 3px 16px rgba(31,31,71,0.14), 0 1.5px 6px rgba(243,148,255,0.08);
+  padding: 28px 18px 24px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  border: 2px solid var(--cine-secondary);
+}
+
+.cinesphere-feature-title {
+  color: var(--cine-secondary);
+  font-size: 1.22rem;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  letter-spacing: 0.2px;
+}
+
+.cinesphere-feature-desc {
+  font-size: 1.03rem;
+  color: var(--cine-accent);
+  margin-bottom: 16px;
+  min-height: 44px;
+  line-height: 1.45;
+  opacity: 0.96;
+}
+
+.cinesphere-placeholder {
+  margin-top: auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  border-radius: 7px;
+  background: rgba(243,148,255, 0.09);
+  color: var(--cine-secondary);
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  font-style: italic;
+  border: 1px dashed var(--cine-secondary);
+}
+
+@media (max-width: 1200px) {
+  .cinesphere-feature-grid {
+    flex-wrap: wrap;
+    gap: 18px;
+  }
+}
+
+@media (max-width: 950px) {
+  .cinesphere-feature-grid {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .cinesphere-feature-col {
+    max-width: none;
+    min-width: 0;
+  }
+}

@@ -29,40 +29,61 @@ export async function searchMovies(query, page = 1, language = "ta", region = "I
         `&include_adult=false`;
 
     try {
+        let results = [];
+        let data;
+        // 1. Search by query
         const res = await fetch(url);
-        if (!res.ok) throw new Error("TMDb searchMovies failed");
-        const data = await res.json();
-
-        // Filter strictly for original_language (post-filter on client; required for Tamil etc.)
-        let results = (data.results || []).filter(
-            m => m && m.original_language && m.original_language.toLowerCase() === language.toLowerCase()
-        );
-        // Fallback: If no results AND Tamil (Kollywood), try discover fallback with genre mapping.
+        if (res.ok) {
+            data = await res.json();
+            results = (data.results || []).filter(
+                m => m && m.original_language && m.original_language.toLowerCase() === language.toLowerCase()
+            );
+        }
+        // (KOLLYWOOD FALLBACK) If zero results and Tamil, fallback to discover/movie with mapped genre if possible
         if (results.length === 0 && language.toLowerCase() === "ta") {
-            // Try genre-mapping fallback for "mood"
-            const mappedGenreId = getKollywoodGenreIdFromMood(query);
-            if (mappedGenreId) {
-                // Use TMDb discover endpoint for Tamil movies of that genre
-                const discoverUrl = `${TMDB_API_URL}/discover/movie?api_key=${TMDB_API_KEY}` +
-                    `&with_genres=${mappedGenreId}` +
+            // Try to map to genre, and fallback to discover endpoint
+            const genreId = getKollywoodGenreIdFromMood(query);
+            let discoverUrl;
+            if (genreId) {
+                discoverUrl = `${TMDB_API_URL}/discover/movie?api_key=${TMDB_API_KEY}` +
+                    `&with_genres=${genreId}` +
+                    `&sort_by=popularity.desc` +
+                    `&with_original_language=ta` +
+                    `&language=ta` +         // response language (not filter)
+                    `&region=IN` +
+                    `&page=${page}` +
+                    `&include_adult=false`;
+            } else {
+                // If no genre mapping, fallback to Tamil discover with just filters, so user gets SOMETHING for their mood
+                discoverUrl = `${TMDB_API_URL}/discover/movie?api_key=${TMDB_API_KEY}` +
                     `&sort_by=popularity.desc` +
                     `&with_original_language=ta` +
                     `&language=ta` +
                     `&region=IN` +
                     `&page=${page}` +
                     `&include_adult=false`;
+            }
+            try {
                 const discoverRes = await fetch(discoverUrl);
                 if (discoverRes.ok) {
                     const discoverData = await discoverRes.json();
+                    // Only pick "real" Tamil movies
                     results = (discoverData.results || []).filter(
                         m => m && m.original_language && m.original_language.toLowerCase() === "ta"
                     );
+                } else {
+                    // API returned error for fallback endpoint
+                    results = [];
                 }
+            } catch (discoverErr) {
+                // Network/parse/etc error in fallback
+                results = [];
             }
         }
-        return results;
+        // If everything failed, return []
+        return Array.isArray(results) ? results : [];
     } catch (err) {
-        // fallback mechanism inside UI if required
+        // Robust: ensure that any network or API problem yields [] not exception
         return [];
     }
 }

@@ -143,7 +143,9 @@ function MovieMoodMatcher({ regionConfig }) {
           <div className="cinesphere-placeholder">
             <span>
               {tmdb.language === "ta"
-                ? "No movies match your mood in Kollywood right now. Try a different mood or keyword!"
+                ? (query.trim()
+                    ? "No Tamil movies found for this mood. Try a different mood keyword!"
+                    : "Try a mood (e.g., suspense, romance, comedy) — Get Kollywood picks!")
                 : `Try a mood keyword — Get instant ${regionConfig.label} picks!`
               }
             </span>

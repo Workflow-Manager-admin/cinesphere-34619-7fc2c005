@@ -207,60 +207,66 @@ function GuessTheMovieGame() {
     }
   }
 
-  // Hints: show lead actor, year, or part of title (hidden letters).
-  async function handleHint() {
-    if (!movie) return;
-    let options = [];
-    // Partial title: show first X chars, rest as "_"
-    options.push(() => {
-      const wordSplit = movie.title.split(' ');
-      if (movie.title.length >= 6) {
-        // Mask 60% of each word (unless short/stopword)
-        return 'Title: ' + wordSplit.map(w => {
+  // Individual handlers for each hint type
+  async function handleHintActor() {
+    if (!movie || hintActor) return;
+    setHintActor(true);
+    setScore(s => s - config.hintPenalty);
+    // Fetch lead actor using TMDb credits endpoint
+    try {
+      const url = `https://api.themoviedb.org/3/movie/${movie.id}/credits?api_key=5bc67d3b06aecbd18121a3cbbc16eb59`;
+      let res = await fetch(url);
+      if (res.ok) {
+        let data = await res.json();
+        let lead = (data.cast && data.cast.length) ? data.cast[0].name : null;
+        setHintActorValue(lead ? `Lead Actor: ${lead}` : "No lead actor found.");
+      } else {
+        setHintActorValue("No lead actor found.");
+      }
+    } catch {
+      setHintActorValue("No lead actor found.");
+    }
+  }
+
+  function handleHintYear() {
+    if (!movie || hintYear) return;
+    setHintYear(true);
+    setScore(s => s - config.hintPenalty);
+    setHintYearValue(
+      movie.release_date
+        ? `Release Year: ${movie.release_date.slice(0,4)}`
+        : "Year unavailable."
+    );
+  }
+
+  function handleHintTitle() {
+    if (!movie || hintTitle) return;
+    setHintTitle(true);
+    setScore(s => s - config.hintPenalty);
+    const wordSplit = movie.title.split(' ');
+    if (movie.title.length >= 6) {
+      // Mask ~60% of each word unless very short
+      const masked = wordSplit
+        .map(w => {
           if (w.length < 3) return w;
           const visible = Math.ceil(w.length * 0.4);
           return w.slice(0, visible) + "_".repeat(w.length - visible);
-        }).join(' ');
-      }
-      return '';
-    });
-    // Release year
-    if (movie.release_date)
-      options.push(() => "Year: " + movie.release_date.slice(0,4));
-    // Lead actor (needs tmdb API: /movie/{movie_id}/credits)
-    options.push(async () => {
-      try {
-        const url = `https://api.themoviedb.org/3/movie/${movie.id}/credits?api_key=5bc67d3b06aecbd18121a3cbbc16eb59`;
-        let res = await fetch(url);
-        if (!res.ok) return '';
-        let data = await res.json();
-        let lead = (data.cast && data.cast.length) ? data.cast[0].name : null;
-        if (lead) return `Lead actor: ${lead}`;
-      } catch {
-        // fail silently
-      }
-      return '';
-    });
-    // Pick random hint not already shown
-    setHintsUsed(h => h+1);
-    let pool = [...options];
-    let nextHint = '';
-    // Pick randomly (but cycle if exhausted)
-    while (pool.length && !nextHint) {
-      let idx = Math.floor(Math.random()*pool.length);
-      let gen = pool.splice(idx, 1)[0];
-      let val = await gen();
-      if (val && (!hint || !hint.includes(val))) nextHint = val;
+        })
+        .join(' ');
+      setHintTitleValue(`Partial Title: ${masked}`);
+    } else {
+      setHintTitleValue("Partial title unavailable.");
     }
-    if (!nextHint) nextHint = "No more hints available.";
-    setHint(hint ? hint + " | " + nextHint : nextHint);
-    setScore(s => s - config.hintPenalty);
   }
 
   function handleGiveUp() {
     setReveal(true);
     setStatus("");
     setScore(s => s - 3); // Small penalty for giving up
+    // On give up, reveal all hints if not already shown
+    if (!hintActor) handleHintActor();
+    if (!hintYear) handleHintYear();
+    if (!hintTitle) handleHintTitle();
   }
 
   function handleNextLevel() {
@@ -271,8 +277,7 @@ function GuessTheMovieGame() {
     setGuess("");
     setReveal(false);
     setError("");
-    setHint("");
-    setHintsUsed(0);
+    resetHints();
   }
 
   function handleRestartGame() {
@@ -284,8 +289,7 @@ function GuessTheMovieGame() {
     setGuess("");
     setReveal(false);
     setError("");
-    setHint("");
-    setHintsUsed(0);
+    resetHints();
   }
 
   // Progress UI

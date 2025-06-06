@@ -2,9 +2,9 @@
 > react-kavia@0.1.0 start
 > react-scripts start
 
-(node:33177) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:34051) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
 (Use `node --trace-deprecation ...` to show where the warning was created)
-(node:33177) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:34051) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
 Starting the development server...
 
 Compiled successfully!
@@ -23,32 +23,15 @@ Compiled with warnings.
 
 [eslint] 
 src/CineSphereMainContainer.js
-  Line 132:79:  React Hook React.useEffect has a missing dependency: 'fetchGameMovie'. Either include it or remove the dependency array               react-hooks/exhaustive-deps
-  Line 270:6:   React Hook React.useEffect has missing dependencies: 'gems.length' and 'loading'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 140:79:  React Hook React.useEffect has a missing dependency: 'fetchGameMovie'. Either include it or remove the dependency array               react-hooks/exhaustive-deps
+  Line 278:6:   React Hook React.useEffect has missing dependencies: 'gems.length' and 'loading'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
 
 Search for the keywords to learn more about each warning.
 To ignore, add // eslint-disable-next-line to the line before.
 
 WARNING in [eslint] 
 src/CineSphereMainContainer.js
-  Line 132:79:  React Hook React.useEffect has a missing dependency: 'fetchGameMovie'. Either include it or remove the dependency array               react-hooks/exhaustive-deps
-  Line 270:6:   React Hook React.useEffect has missing dependencies: 'gems.length' and 'loading'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
-
-webpack compiled with 1 warning
-Compiling...
-Compiled with warnings.
-
-[eslint] 
-src/CineSphereMainContainer.js
-  Line 132:79:  React Hook React.useEffect has a missing dependency: 'fetchGameMovie'. Either include it or remove the dependency array               react-hooks/exhaustive-deps
-  Line 270:6:   React Hook React.useEffect has missing dependencies: 'gems.length' and 'loading'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
-
-Search for the keywords to learn more about each warning.
-To ignore, add // eslint-disable-next-line to the line before.
-
-WARNING in [eslint] 
-src/CineSphereMainContainer.js
-  Line 132:79:  React Hook React.useEffect has a missing dependency: 'fetchGameMovie'. Either include it or remove the dependency array               react-hooks/exhaustive-deps
-  Line 270:6:   React Hook React.useEffect has missing dependencies: 'gems.length' and 'loading'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 140:79:  React Hook React.useEffect has a missing dependency: 'fetchGameMovie'. Either include it or remove the dependency array               react-hooks/exhaustive-deps
+  Line 278:6:   React Hook React.useEffect has missing dependencies: 'gems.length' and 'loading'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
 
 webpack compiled with 1 warning

@@ -37,6 +37,14 @@ function MovieMoodMatcher({ regionConfig }) {
     region: "IN"
   };
 
+  // Effect: Whenever selected region changes, clear movie state and query.
+  React.useEffect(() => {
+    setQuery("");
+    setMovies([]);
+    setError("");
+    setLoading(false);
+  }, [regionConfig.key, regionConfig.language, regionConfig.region]);
+
   // PUBLIC_INTERFACE
   // Mood matcher now uses TMDb and returns region/language-appropriate movies.
   async function handleSearch(e) {

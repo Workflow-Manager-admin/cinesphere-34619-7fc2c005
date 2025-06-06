@@ -279,8 +279,8 @@ function WhatToWatchGrid({ regionConfig }) {
       className="cinesphere-row-list cinesphere-what2watch-grid"
     >
       <FeatureBox
-        title="Hidden Gems Explorer"
-        desc={`Discover underrated ${regionConfig.label} movies.`}
+        title="Top IMDb"
+        desc={`Discover top-rated ${regionConfig.label} movies as ranked on IMDb.`}
       >
         <HiddenGemsExplorer regionConfig={regionConfig} />
       </FeatureBox>

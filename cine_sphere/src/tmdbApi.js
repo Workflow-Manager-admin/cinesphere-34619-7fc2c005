@@ -15,13 +15,15 @@ const TMDB_API_KEY = "5bc67d3b06aecbd18121a3cbbc16eb59";
  * @return {Promise<Array>} List of movie objects
  */
 export async function searchMovies(query, page = 1) {
+    // Updates: language set to Tamil ('ta'), original_language ensures Kollywood, exclude adult, prioritize Kollywood relevance
     const url = `${TMDB_API_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(
         query
-    )}&page=${page}&language=en-US&include_adult=false`;
+    )}&page=${page}&language=ta&with_original_language=ta&include_adult=false`;
     const res = await fetch(url);
     if (!res.ok) throw new Error("TMDb searchMovies failed");
     const data = await res.json();
-    return data.results || [];
+    // Ensure only Tamil/Kollywood movies are in result
+    return (data.results || []).filter(m => m.original_language === "ta");
 }
 
 /**
@@ -33,9 +35,18 @@ export async function searchMovies(query, page = 1) {
  */
 export async function getHiddenGems(page = 1) {
     // Criteria: low popularity, high vote average, min vote count to filter spam.
-    const url = `${TMDB_API_URL}/discover/movie?api_key=${TMDB_API_KEY}&sort_by=vote_average.desc&vote_count.gte=100&vote_average.gte=7&with_original_language=en&popularity.lte=10&page=${page}`;
+    // Modified: only include Kollywood/Tamil-language movies
+    const url = `${TMDB_API_URL}/discover/movie?api_key=${TMDB_API_KEY}`
+        + `&sort_by=vote_average.desc`
+        + `&vote_count.gte=50`
+        + `&vote_average.gte=7`
+        + `&with_original_language=ta`
+        + `&popularity.lte=10`
+        + `&with_language=ta`
+        + `&page=${page}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error("TMDb getHiddenGems failed");
     const data = await res.json();
-    return data.results || [];
+    // Filter to ensure original language is Tamil
+    return (data.results || []).filter(m => m.original_language === "ta");
 }

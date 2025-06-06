@@ -191,34 +191,80 @@ function GuessTheMovieGame({ regionConfig }) {
 }
 
 function HiddenGemsExplorer({ regionConfig }) {
+  // Enhanced: pagination/"Show more" for Top IMDb
+  const PAGE_SIZE = 8; // can be tuned for optimal mobile/desktop UX
   const [gems, setGems] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
+  const [page, setPage] = React.useState(1);
+  const [hasMore, setHasMore] = React.useState(true);
+
+  // Reset gems on region/language change
+  React.useEffect(() => {
+    setGems([]);
+    setPage(1);
+    setHasMore(true);
+  }, [regionConfig.language]);
+
+  // Load gems for current page
   React.useEffect(() => {
     let isMounted = true;
     setLoading(true);
     setError("");
-    getHiddenGems(1, regionConfig.language)
+    getHiddenGems(page, regionConfig.language)
       .then(res => {
-        if (isMounted) setGems(res.slice(0, 6));
+        if (!isMounted) return;
+        // For each page after 1, append new gems, removing duplicates
+        if (page === 1) {
+          setGems(res.slice(0, PAGE_SIZE));
+        } else {
+          setGems(prev => {
+            const all = [...prev, ...res];
+            // De-dup
+            const dedup = [];
+            const idSet = new Set();
+            for (let m of all) {
+              if (!idSet.has(m.id)) {
+                idSet.add(m.id);
+                dedup.push(m);
+              }
+            }
+            return dedup.slice(0, prev.length + PAGE_SIZE); // Don't grow too fast
+          });
+        }
+        // If less than 18 per TMDb page, or if no new unique gems, assume no more
+        setHasMore(res.length === 20 || res.length >= PAGE_SIZE);
       })
       .catch(() => {
         if (isMounted) setError("Failed to load hidden gems.");
       })
       .finally(() => { if (isMounted) setLoading(false); });
     return () => { isMounted = false; };
-  }, [regionConfig.language]);
+  }, [regionConfig.language, page]);
+
+  function handleShowMore() {
+    if (!loading && hasMore) setPage(prev => prev + 1);
+  }
+
   return (
     <div style={{ width: "100%" }}>
-      {loading && <div style={{ fontStyle: "italic" }}>Loading...</div>}
+      {loading && page === 1 && <div style={{ fontStyle: "italic" }}>Loading...</div>}
       {error && (
         <div style={{ color: "#fff0ee", background: "#e34", borderRadius: 6, padding: "6px 8px", fontSize: "0.98rem" }}>{error}</div>
       )}
-      <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+      <ul style={{ listStyle: "none", padding: 0, margin: 0, maxHeight: 380, overflowY: "auto" }}>
         {gems.map(gem => (
-          <li key={gem.id} style={{ marginBottom: 7, display: "flex", alignItems: "center", gap: 10 }}>
+          <li key={gem.id} style={{
+            marginBottom: 7,
+            display: "flex", alignItems: "center", gap: 10,
+            background: "#f9f7fb",
+            borderRadius: 8,
+            padding: "4px 6px",
+            boxShadow: "0 1px 5px #e6dde825",
+            minHeight: 48
+          }}>
             {gem.poster_path && (
-              <img src={`https://image.tmdb.org/t/p/w92${gem.poster_path}`} width={34} height={48} alt="" style={{ borderRadius: 6, border: "1.5px solid #f394ff" }} />
+              <img src={`https://image.tmdb.org/t/p/w92${gem.poster_path}`} width={34} height={48} alt="" style={{ borderRadius: 6, border: "1.5px solid #f394ff", background: "#f3eaff" }} />
             )}
             <span style={{ fontWeight: 500 }}>{gem.title}</span>
             <span style={{ color: "#f394ff", fontSize: 13, marginLeft: 3 }}>★ {gem.vote_average?.toFixed(1)}</span>
@@ -233,6 +279,29 @@ function HiddenGemsExplorer({ regionConfig }) {
           </span>
         </div>
       )}
+      <div style={{ textAlign: "center", marginTop: 10 }}>
+        {hasMore && !loading && (
+          <button
+            type="button"
+            className="btn"
+            style={{
+              background: "#f394ff",
+              color: "#1f1f47",
+              fontWeight: 600,
+              fontSize: "0.99rem",
+              borderRadius: 7,
+              margin: "7px auto 0 auto",
+              minWidth: 98,
+              boxShadow: "0 2px 6px #1f1f4730"
+            }}
+            onClick={handleShowMore}
+            disabled={loading}
+          >Show more</button>
+        )}
+        {loading && page > 1 && (
+          <span style={{ color: "#8473a5", fontStyle: "italic", marginTop: 7, display: "inline-block" }}>Loading…</span>
+        )}
+      </div>
     </div>
   );
 }

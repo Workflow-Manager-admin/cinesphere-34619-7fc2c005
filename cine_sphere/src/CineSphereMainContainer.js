@@ -153,9 +153,40 @@ function CineSphereMainContainer() {
             <div className="cinesphere-feature-desc">
               View a blurred movie poster and guess the movie title.
             </div>
-            <div className="cinesphere-placeholder">
-              <span>
-                <strong>Coming Soon:</strong> Guess the Movie Game
+            <div
+              className="cinesphere-placeholder"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                padding: '22px 14px',
+                marginTop: 22,
+                fontSize: '1.19rem',
+                background: 'linear-gradient(95deg,#f394ffa0 0%,#fcfcfc 70%)',
+                color: '#1f1f47',
+                border: '2.5px dashed #f394ff',
+                fontWeight: 600,
+                letterSpacing: '.2px',
+                boxShadow: '0 2px 10px 0 #f394ff21',
+              }}
+            >
+              <span style={{
+                fontWeight: 700,
+                color: '#e45cf7',
+                fontSize: '1.27rem',
+                marginBottom: 8,
+                letterSpacing: '0.2px',
+              }}>
+                🚧 Coming Soon!
+              </span>
+              <span style={{ color: '#1f1f47', opacity: 0.92, fontWeight: 500, fontSize: '1.07rem' }}>
+                Guess the Movie Game <br />
+                <span style={{ fontSize: '0.98rem', fontStyle: 'italic', color: '#7a2c91', display: 'block', marginTop: 7 }}>
+                  (Poster Edition)
+                </span>
+              </span>
+              <span style={{ color: '#8c42a8', marginTop: 14, fontSize: '0.96rem', fontWeight: 400 }}>
+                Challenge yourself to identify movies from their mystery posters — launching soon!
               </span>
             </div>
           </div>

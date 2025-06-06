@@ -6,105 +6,124 @@
 }
 
 /* Main CineSphere container override */
+/* Modern horizontal-row regional UI for CineSphereMainContainer */
+
 .cinesphere-main-container {
   background: var(--cine-accent);
   min-height: 100vh;
-  padding: 48px 24px 32px 24px;
+  padding: 36px 2vw 32px 2vw;
   box-sizing: border-box;
   color: var(--cine-primary);
   font-family: 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  width: 100%;
 }
 
-.cinesphere-title {
-  color: var(--cine-primary);
-  font-size: 2.5rem;
+/* Region title card */
+.cinesphere-region-title-label {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 18px;
+  justify-content: flex-start;
+  margin: 0 0 26px 6px;
+}
+.cinesphere-region-main {
+  color: var(--cine-secondary);
+  font-size: 2rem;
+  font-weight: 800;
+  margin-right: 12px;
+}
+.cinesphere-region-sub {
+  color: #8473a5;
+  font-size: 1.16rem;
+  font-weight: 500;
+  margin-top: 10px;
+}
+
+/* Main horizontal rows container */
+.cinesphere-main-horiz {
+  width: 100%;
+  max-width: 1570px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+/* Each horizontal section ("What to Watch", "Games") */
+.cinesphere-horiz-section {
+  width: 100%;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.cinesphere-row-label {
+  font-size: 1.31rem;
   font-weight: 700;
-  text-align: center;
-  margin-top: 0;
-  margin-bottom: 36px;
+  color: var(--cine-primary);
+  background: rgba(243, 148, 255, 0.14);
+  padding: 6px 20px 7px 11px;
+  border-radius: 10px 10px 0 0;
+  border-left: 5px solid var(--cine-secondary);
+  margin-bottom: 0;
+  margin-left: 0;
   letter-spacing: 1px;
 }
 
-.cinesphere-feature-grid {
+/* Horizontal scrollable row for features */
+.cinesphere-row-list {
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
-  gap: 22px;
-  justify-content: center;
+  gap: 24px;
+  padding: 15px 6px 16px 11px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
   align-items: flex-start;
-}
-
-.cinesphere-feature-grid.sixcol-grid {
-  gap: 22px;
-  flex-wrap: wrap;
-}
-
-.cinesphere-feature-col.sixcol {
-  min-width: 300px;
-  max-width: 330px;
+  background: #fcfcfc;
+  border-radius: 0 0 18px 18px;
+  box-shadow: 0 2px 9px #b5aac228;
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 13px;
-  align-items: stretch;
-  flex: 1 1 300px;
-  background: none;
-  border-radius: 14px;
-  /* margin: 7px; */
+  scrollbar-width: thin;
 }
 
-.cinesphere-feature-col-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-bottom: 6px;
-}
-
-.cinesphere-feature-region-label {
-  color: var(--cine-secondary);
-  font-size: 1.23rem;
-  font-weight: 700;
-  letter-spacing: 0.8px;
-  margin-top: 0;
-}
-
-.cinesphere-feature-region-sub {
-  color: #8473a5;
-  font-size: 0.91rem;
-  font-weight: 500;
-  margin-bottom: 2px;
-}
-
-.cinesphere-feature-box {
+.cinesphere-feature-rowbox {
   background: var(--cine-primary);
   color: var(--cine-accent);
   border-radius: 18px;
-  box-shadow: 0 3px 16px rgba(31,31,71,0.14), 0 1.5px 6px rgba(243,148,255,0.08);
-  padding: 28px 18px 24px 18px;
+  box-shadow: 0 2px 11px #1f1f4730;
+  padding: 21px 12px 17px 13px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  width: 100%;
+  min-width: 260px;
+  max-width: 335px;
+  width: 100vw;
   border: 2px solid var(--cine-secondary);
+  margin-bottom: 0;
+  flex: 1 0 260px;
+  box-sizing: border-box;
 }
 
-.cinesphere-feature-title {
+.cinesphere-feature-row-title {
   color: var(--cine-secondary);
-  font-size: 1.22rem;
+  font-size: 1.07rem;
   font-weight: 600;
-  margin: 0 0 8px 0;
-  letter-spacing: 0.2px;
+  margin: 0 0 6px 0;
+  letter-spacing: 0.15px;
 }
 
-.cinesphere-feature-desc {
-  font-size: 1.03rem;
+.cinesphere-feature-row-desc {
+  font-size: 0.98rem;
   color: var(--cine-accent);
-  margin-bottom: 16px;
-  min-height: 44px;
+  margin-bottom: 11px;
+  min-height: 25px;
   line-height: 1.45;
-  opacity: 0.96;
+  opacity: 0.97;
 }
 
+/* Subtle for placeholders */
 .cinesphere-placeholder {
   margin-top: auto;
   width: 100%;
@@ -114,133 +133,59 @@
   border-radius: 7px;
   background: rgba(243,148,255, 0.09);
   color: var(--cine-secondary);
-  padding: 10px 12px;
+  padding: 8px 7px;
   font-size: 0.95rem;
   font-style: italic;
   border: 1px dashed var(--cine-secondary);
+  min-height: 32px;
 }
 
-@media (max-width: 1500px) {
-  .cinesphere-feature-grid.sixcol-grid {
-    flex-wrap: wrap;
-    gap: 18px;
+@media (max-width: 1300px) {
+  .cinesphere-row-list {
+    gap: 15px;
+    padding-left: 7px; padding-right: 7px;
   }
-  .cinesphere-feature-col.sixcol {
-    min-width: 300px;
-    max-width: 1fr;
-    flex: 1 1 300px;
-  }
-}
-
-@media (max-width: 1200px) {
-  .cinesphere-feature-grid.sixcol-grid {
-    gap: 11px;
-  }
-  .cinesphere-feature-col.sixcol {
-    min-width: 260px;
-    max-width: 480px;
-    flex: 1 1 100%;
+  .cinesphere-feature-rowbox {
+    min-width: 210px;
+    max-width: 350px;
   }
 }
-
-@media (max-width: 950px) {
-  .cinesphere-feature-grid.sixcol-grid {
-    flex-direction: column;
-    gap: 12px;
-    align-items: stretch;
-  }
-  .cinesphere-feature-col.sixcol {
-    max-width: none;
-    min-width: 0;
-    width: 98vw;
-    margin: 0 auto 18px auto;
-  }
-}
-
-@media (max-width: 700px) {
-  .cinesphere-feature-col.sixcol,
-  .cinesphere-main-container {
-    padding: 0 2vw;
-  }
-  .cinesphere-feature-box {
-    padding: 17px 6px 13px 6px;
-  }
-  .cinesphere-feature-region-label {
-    font-size: 1.11rem;
-  }
-}
-
-@media (max-width: 510px) {
-  .cinesphere-feature-col.sixcol {
-    min-width: 178px;
-    width: 99vw;
-    margin: 0 auto 18px auto;
-    gap: 7px;
-  }
-  .cinesphere-title {
-    font-size: 1.31rem;
-  }
-}
-
-/* --- NEW FOR TWO-COLUMN REGION LAYOUT --- */
-.cinesphere-feature-twocol-wrapper {
-  display: flex;
-  flex-direction: row;
-  gap: 32px;
-  width: 100%;
-  max-width: 1300px;
-  margin: 0 auto;
-  justify-content: center;
-  align-items: flex-start;
-  min-height: 78vh;
-}
-
-.cinesphere-twocol {
-  background: none;
-  box-shadow: none;
-  border-radius: 0;
-  flex: 1 1 340px;
-  min-width: 300px;
-  max-width: 460px;
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-}
-
-.what-to-watch-col {
-  margin-right: 0;
-}
-.games-col {
-  margin-left: 0;
-}
-
-/* Make feature-boxes fill, but with spacing */
-.cinesphere-twocol .cinesphere-feature-box {
-  width: 100%;
-}
-
-/* Responsive for tablet/medium screens */
-@media (max-width: 1100px) {
-  .cinesphere-feature-twocol-wrapper {
-    gap: 16px;
-    max-width: 100vw;
-  }
-  .cinesphere-twocol {
-    min-width: 0;
+@media (max-width: 900px) {
+  .cinesphere-feature-rowbox {
+    min-width: 175px;
     max-width: 95vw;
+    font-size: 96%;
+  }
+  .cinesphere-region-title-label {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+@media (max-width: 700px) {
+  .cinesphere-main-container {
+    padding: 9px 2vw 20px 2vw;
+  }
+  .cinesphere-row-label {
+    font-size: 1.07rem;
+    padding-left: 5px;
+  }
+  .cinesphere-feature-rowbox {
+    padding: 13px 5px 8px 7px;
+    min-width: 140px;
+  }
+}
+@media (max-width: 480px) {
+  .cinesphere-main-container {
+    padding: 5px 1.5vw 8px 1.5vw;
+  }
+  .cinesphere-feature-rowbox {
+    min-width: 94vw;
+    max-width: 99vw;
+    padding: 7px 2px 7px 2px;
   }
 }
 
-/* Responsive: stack columns on small screens */
-@media (max-width: 780px) {
-  .cinesphere-feature-twocol-wrapper {
-    flex-direction: column;
-    gap: 24px;
-    max-width: 98vw;
-    align-items: stretch;
-    min-height: 10vh;
-  }
-  .cinesphere-twocol {
-    max-width: 99vw;
-  }
+.cinesphere-feature-rowbox > *:last-child {
+  margin-bottom: 0;
 }

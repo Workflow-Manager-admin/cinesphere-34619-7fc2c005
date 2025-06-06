@@ -133,7 +133,7 @@ function GuessTheMovieGame({ region, onRegionChange }) {
     setHintYearValue('');
   }
 
-  // New random movie/round
+  // New random movie/round - fetches based on region parameter
   async function fetchGameMovie() {
     setLoading(true);
     setError("");
@@ -145,26 +145,35 @@ function GuessTheMovieGame({ region, onRegionChange }) {
     try {
       let found = null;
       if (config.obscure) {
-        // Hidden gems: already filtered in tmdbApi.js for Kollywood/Tamil
-        for (let tries = 0; tries < 4; tries++) {
+        // Hidden gems, filtered by region
+        for (let tries = 0; tries < 5; tries++) {
           const { getHiddenGems } = await import('./tmdbApi');
-          const gems = await getHiddenGems(Math.floor(Math.random() * 3) + 1);
+          const gems = await getHiddenGems(Math.floor(Math.random() * 3) + 1, region);
           if (gems.length > 0) {
             found = gems[Math.floor(Math.random() * gems.length)];
             if (found.poster_path && found.title) break;
           }
         }
       } else {
-        // For "popular" level, use TMDb discover with Tamil only, since "movie/popular" isn't regional/language specific
+        // For "popular" level, use discover for the corresponding language
         for (let tries = 0; tries < 5; tries++) {
-          const page = Math.floor(Math.random() * 12) + 1; // Limited pages for Tamil
-          const url = `https://api.themoviedb.org/3/discover/movie?api_key=5bc67d3b06aecbd18121a3cbbc16eb59`
-            + `&with_original_language=ta&with_language=ta&sort_by=popularity.desc`
-            + `&include_adult=false&page=${page}`;
-          const res = await fetch(url);
+          const page = Math.floor(Math.random() * 12) + 1;
+          // Choose language + with_original_language depending on region
+          let lang = region === "en" ? "en" : "ta";
+          let apiUrl =
+            `https://api.themoviedb.org/3/discover/movie?api_key=5bc67d3b06aecbd18121a3cbbc16eb59` +
+            `&with_original_language=${lang}&with_language=${lang}&sort_by=popularity.desc` +
+            `&include_adult=false&page=${page}`;
+          const res = await fetch(apiUrl);
           if (!res.ok) throw new Error("Failed to load movie posters.");
           const data = await res.json();
-          const posters = (data.results || []).filter(m => m.poster_path && m.title && !m.adult && m.original_language === "ta");
+          const posters = (data.results || []).filter(
+            m =>
+              m.poster_path &&
+              m.title &&
+              !m.adult &&
+              m.original_language === lang
+          );
           if (posters.length > 0) {
             found = posters[Math.floor(Math.random() * posters.length)];
             break;
@@ -211,7 +220,9 @@ function GuessTheMovieGame({ region, onRegionChange }) {
     setHintActor(true);
     setScore(s => s - config.hintPenalty);
     try {
-      const url = `https://api.themoviedb.org/3/movie/${movie.id}/credits?api_key=5bc67d3b06aecbd18121a3cbbc16eb59`;
+      // Add with_language param for API; region dependent
+      const url = `https://api.themoviedb.org/3/movie/${movie.id}/credits?api_key=5bc67d3b06aecbd18121a3cbbc16eb59`
+        + `&with_language=${region}`;
       let res = await fetch(url);
       if (res.ok) {
         let data = await res.json();

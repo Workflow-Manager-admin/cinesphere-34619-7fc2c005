@@ -83,8 +83,8 @@ function MovieMoodMatcher() {
  * PUBLIC_INTERFACE
  * GuessTheMovieGame - Enhanced with levels, scoring, explicit per-hint button system
  */
-function GuessTheMovieGame() {
-  // Game config
+function GuessTheMovieGame({ region, onRegionChange }) {
+  // Game config (unchanged)
   const LEVELS = [
     { blur: 8, desc: "Popular Movies", obscure: false, hintPenalty: 2 },
     { blur: 13, desc: "Less Popular or More Blur", obscure: false, hintPenalty: 3 },
@@ -94,14 +94,20 @@ function GuessTheMovieGame() {
   const MAX_LEVEL = 5;
   const INITIAL_SCORE = 0;
 
+  // State for region toggle local to game for persistent display (lifted state handled in parent)
+  const languageOptions = [
+    { value: 'en', label: 'Hollywood (English)' },
+    { value: 'ta', label: 'Kollywood (Tamil)' }
+  ];
+
   // Main game state
-  const [level, setLevel] = React.useState(1); // Level starts at 1
+  const [level, setLevel] = React.useState(1);
   const [score, setScore] = React.useState(INITIAL_SCORE);
   const [round, setRound] = React.useState(1);
 
   const [movie, setMovie] = React.useState(null); // { poster_path, title }
   const [guess, setGuess] = React.useState('');
-  const [status, setStatus] = React.useState(''); // "success" | "fail" | ""
+  const [status, setStatus] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [reveal, setReveal] = React.useState(false);
   const [error, setError] = React.useState('');

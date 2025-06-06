@@ -298,9 +298,9 @@ function HiddenGemsExplorer({ regionConfig }) {
             {gem.poster_path && (
               <img src={`https://image.tmdb.org/t/p/w92${gem.poster_path}`} width={34} height={48} alt="" style={{ borderRadius: 6, border: "1.5px solid #f394ff", background: "#f3eaff" }} />
             )}
-            <span style={{ fontWeight: 500 }}>{gem.title}</span>
-            <span style={{ color: "#f394ff", fontSize: 13, marginLeft: 3 }}>★ {gem.vote_average?.toFixed(1)}</span>
-            <span style={{ color: "#aaaac1", fontSize: 13 }}>{gem.release_date ? `(${gem.release_date.slice(0, 4)})` : ""}</span>
+            <span style={{ fontWeight: 500, color: "#000" }}>{gem.title}</span>
+            <span style={{ color: "#000", fontSize: 13, marginLeft: 3 }}>★ {gem.vote_average?.toFixed(1)}</span>
+            <span style={{ color: "#000", fontSize: 13 }}>{gem.release_date ? `(${gem.release_date.slice(0, 4)})` : ""}</span>
           </li>
         ))}
       </ul>

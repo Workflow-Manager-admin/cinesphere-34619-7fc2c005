@@ -12,7 +12,7 @@ function App() {
     try {
       if (storedAuth) {
         const parsed = JSON.parse(storedAuth);
-        if (parsed && parsed.email) return parsed;
+        if (parsed && parsed.username) return parsed;
       }
     } catch {}
     return null;
@@ -42,9 +42,9 @@ function App() {
               <span className="logo-symbol" style={{ color: "#f394ff" }}>*</span> CineSphere
             </div>
             <div>
-              {/* Show user email and logout */}
+              {/* Show user username and logout */}
               <span style={{ color: "#f394ff", marginRight: 18, fontWeight: 500, fontSize: "1rem" }}>
-                {auth?.email}
+                {auth?.username}
               </span>
               <button
                 type="button"

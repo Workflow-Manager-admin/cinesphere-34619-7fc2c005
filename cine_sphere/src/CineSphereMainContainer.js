@@ -81,30 +81,23 @@ function MovieMoodMatcher() {
 
 /**
  * PUBLIC_INTERFACE
- * GuessTheMovieGame - Enhanced with levels, progressive difficulty, score, and progress UI.
- *
- * Levels progression:
- *  - Level 1: Easier (low blur, popular movies)
- *  - Level 2+: More blur and greater use of obscure movies
- * - Score is awarded for correct answer, lost for skipping or wrong.
- * - Shows progress bar/UI.
+ * GuessTheMovieGame - Enhanced with levels, scoring, explicit per-hint button system
  */
 function GuessTheMovieGame() {
-  // Game config for levels.
+  // Game config
   const LEVELS = [
-    // Each object can define: blurStrength, obscure (if true, pulls from Hidden Gems API instead of Popular)
-    { blur: 8, desc: "Popular Movies", obscure: false, hintPenalty: 2 },   // Level 1
-    { blur: 13, desc: "Less Popular or More Blur", obscure: false, hintPenalty: 3 },  // Level 2
-    { blur: 16, desc: "Hard Mode: Hidden Gems", obscure: true, hintPenalty: 4 },  // Level 3
-    { blur: 20, desc: "Obscure + Max Blur", obscure: true, hintPenalty: 5 }, // Level 4+
+    { blur: 8, desc: "Popular Movies", obscure: false, hintPenalty: 2 },
+    { blur: 13, desc: "Less Popular or More Blur", obscure: false, hintPenalty: 3 },
+    { blur: 16, desc: "Hard Mode: Hidden Gems", obscure: true, hintPenalty: 4 },
+    { blur: 20, desc: "Obscure + Max Blur", obscure: true, hintPenalty: 5 },
   ];
-  const MAX_LEVEL = 5; // After level 4, levels repeat with max difficulty.
+  const MAX_LEVEL = 5;
   const INITIAL_SCORE = 0;
 
-  // Game State
+  // Main game state
   const [level, setLevel] = React.useState(1); // Level starts at 1
   const [score, setScore] = React.useState(INITIAL_SCORE);
-  const [round, setRound] = React.useState(1); // Used to reset all state per round
+  const [round, setRound] = React.useState(1);
 
   const [movie, setMovie] = React.useState(null); // { poster_path, title }
   const [guess, setGuess] = React.useState('');
@@ -113,7 +106,7 @@ function GuessTheMovieGame() {
   const [reveal, setReveal] = React.useState(false);
   const [error, setError] = React.useState('');
 
-  // Hint system state: track individual hint usages per round
+  // Explicit hint state for each kind of hint
   const [hintActor, setHintActor] = React.useState(false);
   const [hintYear, setHintYear] = React.useState(false);
   const [hintTitle, setHintTitle] = React.useState(false);
@@ -121,10 +114,10 @@ function GuessTheMovieGame() {
   const [hintTitleValue, setHintTitleValue] = React.useState('');
   const [hintYearValue, setHintYearValue] = React.useState('');
 
-  // Select current config per level, cycling after max level for extra difficulty
+  // For per-level config
   const config = level <= LEVELS.length ? LEVELS[level-1] : LEVELS[LEVELS.length-1];
 
-  // Resets all hint state
+  // Resets hint state entirely
   function resetHints() {
     setHintActor(false);
     setHintTitle(false);
@@ -134,7 +127,7 @@ function GuessTheMovieGame() {
     setHintYearValue('');
   }
 
-  // Fetches a random movie, difficulty/obscurity varies by level
+  // New random movie/round
   async function fetchGameMovie() {
     setLoading(true);
     setError("");
@@ -145,22 +138,16 @@ function GuessTheMovieGame() {
 
     try {
       let found = null;
-      // For obscure level, prefer getHiddenGems; else, popular movies API.
       if (config.obscure) {
-        // Use getHiddenGems() (TMDb "discover" endpoint for hidden gems).
-        // Import from tmdbApi
-        // Try up to 4 times to get poster
         for (let tries = 0; tries < 4; tries++) {
-          // getHiddenGems picks random 'page'; pick random index too
           const { getHiddenGems } = await import('./tmdbApi');
-          const gems = await getHiddenGems(Math.floor(Math.random() * 3)+1);
+          const gems = await getHiddenGems(Math.floor(Math.random() * 3) + 1);
           if (gems.length > 0) {
             found = gems[Math.floor(Math.random() * gems.length)];
             if (found.poster_path && found.title) break;
           }
         }
       } else {
-        // Popular movies: Down-sample 1-30 pages => random poster
         for (let tries = 0; tries < 5; tries++) {
           const page = Math.floor(Math.random() * 30) + 1;
           const url = `https://api.themoviedb.org/3/movie/popular?api_key=5bc67d3b06aecbd18121a3cbbc16eb59&page=${page}`;
@@ -183,13 +170,12 @@ function GuessTheMovieGame() {
     setLoading(false);
   }
 
-  // Start round on mount/level/round change
   React.useEffect(() => {
     fetchGameMovie();
     // eslint-disable-next-line
   }, [level, round]);
 
-  // Handles guess submission
+  // PUBLIC_INTERFACE
   function handleGuess(e) {
     e.preventDefault();
     if (!movie) return;
@@ -199,7 +185,9 @@ function GuessTheMovieGame() {
     if (clean(guess) === clean(movie.title)) {
       setStatus("success");
       setReveal(true);
-      setScore(s => s + (5 - hintsUsed*config.hintPenalty));
+      // Points: base 5, minus N * hintPenalty for hints
+      const penalties = [hintActor, hintYear, hintTitle].filter(Boolean).length * config.hintPenalty;
+      setScore(s => s + (5 - penalties));
     } else {
       setStatus("fail");
       setReveal(false);
@@ -207,12 +195,11 @@ function GuessTheMovieGame() {
     }
   }
 
-  // Individual handlers for each hint type
+  // PUBLIC_INTERFACE - Explicit per-hint handlers
   async function handleHintActor() {
     if (!movie || hintActor) return;
     setHintActor(true);
     setScore(s => s - config.hintPenalty);
-    // Fetch lead actor using TMDb credits endpoint
     try {
       const url = `https://api.themoviedb.org/3/movie/${movie.id}/credits?api_key=5bc67d3b06aecbd18121a3cbbc16eb59`;
       let res = await fetch(url);
@@ -228,6 +215,7 @@ function GuessTheMovieGame() {
     }
   }
 
+  // PUBLIC_INTERFACE
   function handleHintYear() {
     if (!movie || hintYear) return;
     setHintYear(true);
@@ -239,13 +227,13 @@ function GuessTheMovieGame() {
     );
   }
 
+  // PUBLIC_INTERFACE
   function handleHintTitle() {
     if (!movie || hintTitle) return;
     setHintTitle(true);
     setScore(s => s - config.hintPenalty);
     const wordSplit = movie.title.split(' ');
     if (movie.title.length >= 6) {
-      // Mask ~60% of each word unless very short
       const masked = wordSplit
         .map(w => {
           if (w.length < 3) return w;
@@ -259,11 +247,11 @@ function GuessTheMovieGame() {
     }
   }
 
+  // PUBLIC_INTERFACE - Reveal answer, show all remaining hints
   function handleGiveUp() {
     setReveal(true);
     setStatus("");
-    setScore(s => s - 3); // Small penalty for giving up
-    // On give up, reveal all hints if not already shown
+    setScore(s => s - 3);
     if (!hintActor) handleHintActor();
     if (!hintYear) handleHintYear();
     if (!hintTitle) handleHintTitle();
@@ -282,7 +270,7 @@ function GuessTheMovieGame() {
 
   function handleRestartGame() {
     setLevel(1);
-    setRound(r => r + 1); // Triggers useEffect fetch
+    setRound(r => r + 1);
     setScore(INITIAL_SCORE);
     setMovie(null);
     setStatus("");
@@ -292,7 +280,6 @@ function GuessTheMovieGame() {
     resetHints();
   }
 
-  // Progress UI
   function progressUI() {
     return (
       <div style={{
@@ -354,7 +341,9 @@ function GuessTheMovieGame() {
                 textShadow: "#fff 0 2px 8px",
                 zIndex: 2,
               }}>
-                🎉 Correct! <span style={{fontWeight:400, fontSize:"0.98rem", marginLeft:5}}>[+{5 - hintsUsed*config.hintPenalty}]</span>
+                🎉 Correct! <span style={{fontWeight:400, fontSize:"0.98rem", marginLeft:5}}>
+                  [+{5 - [hintActor, hintYear, hintTitle].filter(Boolean).length * config.hintPenalty}]
+                </span>
               </span>
             )}
             {status === "fail" && (
@@ -499,7 +488,6 @@ function HiddenGemsExplorer() {
   const [gems, setGems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  // Only fetch once when opened
   React.useEffect(() => {
     let isMounted = true;
     setLoading(true);

@@ -12,24 +12,49 @@ import { searchMovies, getHiddenGems } from "./tmdbApi";
 // --- Minimal Feature Components ---
 
 function MovieMoodMatcher({ regionConfig }) {
+  // This version maps regionConfig to appropriate language/region codes for API
   const [query, setQuery] = React.useState("");
   const [movies, setMovies] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
+
+  // Maps CineSphere regionConfig to TMDb language/region codes:
+  const tmdbLanguageMap = {
+    hollywood: { language: "en", region: "US" },
+    bollywood: { language: "hi", region: "IN" },
+    kollywood: { language: "ta", region: "IN" },
+    tollywood: { language: "te", region: "IN" },
+    sandalwood: { language: "kn", region: "IN" },
+    mollywood: { language: "ml", region: "IN" }
+  };
+
+  // fallback: use regionConfig.language if not found above
+  const selectedKey = Object.keys(tmdbLanguageMap).find(
+    k => regionConfig.key === k
+  );
+  const tmdb = tmdbLanguageMap[selectedKey] || {
+    language: regionConfig.language,
+    region: "IN"
+  };
+
+  // PUBLIC_INTERFACE
+  // Mood matcher now uses TMDb and returns region/language-appropriate movies.
   async function handleSearch(e) {
     e.preventDefault();
     if (!query.trim()) return;
     setLoading(true);
     setError("");
     try {
-      const res = await searchMovies(query.trim(), 1, regionConfig.language);
-      setMovies(res.slice(0, 6));
+      // Always pass correct lang/region to searchMovies
+      const res = await searchMovies(query.trim(), 1, tmdb.language, tmdb.region);
+      setMovies(res.slice(0, 8));
     } catch {
       setError("Failed to fetch movies.");
       setMovies([]);
     }
     setLoading(false);
   }
+
   return (
     <div style={{ width: "100%" }}>
       <form onSubmit={handleSearch} style={{ marginBottom: 8, width: "100%" }}>
@@ -43,7 +68,7 @@ function MovieMoodMatcher({ regionConfig }) {
             width: "68%",
             marginRight: 6,
           }}
-          placeholder={`Enter mood/genre`}
+          placeholder={`Enter mood (e.g., happy, suspense, romantic, action)`}
           value={query}
           onChange={e => setQuery(e.target.value)}
         />

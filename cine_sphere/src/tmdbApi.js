@@ -9,22 +9,30 @@ const TMDB_API_KEY = "5bc67d3b06aecbd18121a3cbbc16eb59";
 /**
  * PUBLIC_INTERFACE
  * searchMovies - Search for movies by a query (e.g., for mood-based searching).
- * @param {string} query
+ * @param {string} query         // user mood or genre etc.
  * @param {number} page
- * @param {string} region - "en" for Hollywood, "ta" for Kollywood (default "ta")
- * @return {Promise<Array>} List of movie objects
+ * @param {string} language      // language code (e.g. "en", "hi", "ta", "te", "kn", "ml")
+ * @param {string} region        // region/country code (e.g., "US", "IN"), optional
+ * @return {Promise<Array>} List of movie objects (filtered for given language)
  */
-export async function searchMovies(query, page = 1, region = "ta") {
-    // Updates: language set to selected language, original_language ensures Kollywood or Hollywood, exclude adult, prioritize relevance
-    const lang = region === "en" ? "en" : "ta";
-    const url = `${TMDB_API_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(
-        query
-    )}&page=${page}&language=${lang}&with_original_language=${lang}&include_adult=false`;
+export async function searchMovies(query, page = 1, language = "ta", region = "IN") {
+    // region is optional in TMDb API, but useful for Bollywood and other Indian industries (also needed for Hollywood)
+    const url = `${TMDB_API_URL}/search/movie?api_key=${TMDB_API_KEY}` +
+        `&query=${encodeURIComponent(query)}` +
+        `&page=${page}` +
+        `&language=${language}` +
+        `&region=${region}` +
+        `&with_original_language=${language}` +
+        `&include_adult=false`;
+
     const res = await fetch(url);
     if (!res.ok) throw new Error("TMDb searchMovies failed");
     const data = await res.json();
-    // Filter to ensure movie matches selected region/language
-    return (data.results || []).filter(m => m.original_language === lang);
+
+    // Filter for language and if region is IN, also allow Indian local languages; for Hollywood use en only.
+    return (data.results || []).filter(
+        m => m.original_language === language
+    );
 }
 
 /**

@@ -4,14 +4,12 @@ import { searchMovies, getHiddenGems } from "./tmdbApi";
 
 /**
  * PUBLIC_INTERFACE
- * CineSphereMainContainer - shows chosen region only, and inside: two horizontally-arranged rows with clear labels.
- * - 'What to watch' (4 features): Hidden Gems Explorer, Movie Mood Matcher, Regional Movie Explorer, Binge Planner
- * - 'Games' (2 features): Film Detective, Guess the Movie Game
- * Each feature is in a horizontally arranged box. All others are removed.
- * Responsive Flex styling; legacy multi-region layout is removed.
+ * CineSphereMainContainer - After region selection, displays only that region,
+ * with two horizontal, labeled feature rows ("What to watch" and "Games") on the left.
+ * Each feature is in its own horizontally-arranged card; responsive, modern, and decluttered.
  */
 
-// ---- Minimal Feature Components ----
+// --- Minimal Feature Components ---
 
 function MovieMoodMatcher({ regionConfig }) {
   const [query, setQuery] = React.useState("");
@@ -84,7 +82,7 @@ function MovieMoodMatcher({ regionConfig }) {
 }
 
 function GuessTheMovieGame({ regionConfig }) {
-  // For brevity: minimal demo logic, reused from earlier version
+  // Minimal poster guessing logic, one per round, only for selected region
   const [guess, setGuess] = React.useState("");
   const [round, setRound] = React.useState(1);
   const [movie, setMovie] = React.useState(null);
@@ -249,7 +247,7 @@ function PlaceholderFeature({ title }) {
   );
 }
 
-// ---- Layout Rows ----
+// --- Feature Card Layouts ---
 
 function FeatureBox({ title, desc, children }) {
   return (
@@ -261,6 +259,7 @@ function FeatureBox({ title, desc, children }) {
   );
 }
 
+// Horizontal "What to watch" row: 4 features side by side (responsive)
 function WhatToWatchRow({ regionConfig }) {
   return (
     <div className="cinesphere-row-list">
@@ -287,6 +286,7 @@ function WhatToWatchRow({ regionConfig }) {
   );
 }
 
+// Horizontal "Games" row: 2 feature cards side by side (responsive)
 function GamesRow({ regionConfig }) {
   return (
     <div className="cinesphere-row-list">
@@ -303,10 +303,12 @@ function GamesRow({ regionConfig }) {
   );
 }
 
-// ---- Main Container ----
+// ---- Main Container "after region selection" ----
 function CineSphereMainContainer({ selectedRegion }) {
-  // Default: assume region selection is done
-  if (!selectedRegion) return <div className="cinesphere-main-container" style={{paddingTop:60}}><div>No region selected.</div></div>;
+  if (!selectedRegion)
+    return (
+      <div className="cinesphere-main-container" style={{paddingTop:60}}><div>No region selected.</div></div>
+    );
 
   return (
     <div className="cinesphere-main-container">

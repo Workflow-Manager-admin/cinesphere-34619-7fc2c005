@@ -102,7 +102,7 @@ function getKollywoodGenreIdFromMood(query) {
         history: 36,      // History
         science: 878,     // Science Fiction
         sci: 878,
-        sci-fi: 878
+        "sci-fi": 878
     };
     // If multiple words, pick first matching (splits by whitespace)
     const words = norm.split(/\s+/);
